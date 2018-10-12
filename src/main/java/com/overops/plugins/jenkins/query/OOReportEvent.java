@@ -36,7 +36,7 @@ public class OOReportEvent {
 			simpleClassName = event.error_location.class_name;
 		}
 		
-;		return event.type + " in " + simpleClassName + "." + event.error_location.method_name;
+;		return event.name + " in " + simpleClassName + "." + event.error_location.method_name;
 	}
 
 	public String getEventRate() {

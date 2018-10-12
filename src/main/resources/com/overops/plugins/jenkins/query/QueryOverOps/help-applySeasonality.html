@@ -1,3 +1,8 @@
 <div>
-     Set whether the active time window is compared against matching historical spikes to avoid false positives.
+For events marked as regression tests to see that any preceding time window within the baseline window did not exceed the volume within the active time window, or that two previous windows did not exceed for each 50% of the active volume. See more: https://en.wikipedia.org/wiki/Seasonality. 
+  
+  For example, an event whose volume is 1000 on Monday may be considered a regression if within the preceding baseline window of a week it only happened 2000 times. The seasonality check will see whether or not within any one of the preceding seasonal windows (calculated as the baseline / active, which in this example translates to a seasonal window of day) the volume has exceeded that of Monday. So if the preceding Tuesday saw 1500 events with the remaining 500 spread across the week, the event will not be considered as a regression, but as a "normal" seasonal occurrence. 
+  
+  The same would be true if the preceding Thursday and Saturday for example saw 500 events each (50% of the active volume). In this case the event will also be considered a "seasonal" spike vs. a regression.
 </div>
+  

@@ -373,7 +373,7 @@ public class RegressionUtil {
 
 				if (printStream != null) {
 					printStream
-							.println(printEvent(activeEvent) + " is critical new event with " + activeEvent.stats.hits);
+							.println(printEvent(activeEvent) + " is critical new event with " + activeEvent.stats.hits + "hits. \n");
 				}
 
 				return REGRESSION.YES;
@@ -403,8 +403,8 @@ public class RegressionUtil {
 			rateRegression.addExceddedNewEvent(activeEvent.id, activeEvent);
 
 			if (printStream != null) {
-				printStream.println(printEvent(activeEvent) + " is new with ER: " + activeEventRatio + " hits: "
-						+ activeEvent.stats.hits);
+				printStream.println(printEvent(activeEvent) + " is new with rate: " + activeEventRatio + " hits: "
+						+ activeEvent.stats.hits + "\n");
 			}
 
 			return REGRESSION.YES;
@@ -537,7 +537,7 @@ public class RegressionUtil {
 		DateTime baselineFrom = fromTime.minusMinutes(baselineTimespan);
 
 		if (printStream != null) {
-			printStream.print("Begin regression analysis");
+			printStream.print("Begin regression analysis\n");
 		}
 		
 		EventsVolumeResult activeEventVolume = ApiViewUtil.getEventsVolume(apiClient, serviceId, viewId, activeFrom,

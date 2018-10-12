@@ -1,3 +1,3 @@
 <div>
-	The change in percentage between an event's rate in the active time span compared to the baseline to be considered a critical regression.    
+The change in rate between an event's rate in the active time span and the error rate during the baseline window to be considered a critical regression that can be used to mark the build as unstable. For example, for an event that used to happen 250 of 5,000 calls into the code (rate = 0.01) in the baseline time window and is now happening 2000 out of 5,000 calls (rate = 0.4), a supplied value of > 0.35 will mark the event as a critical regression
 </div>

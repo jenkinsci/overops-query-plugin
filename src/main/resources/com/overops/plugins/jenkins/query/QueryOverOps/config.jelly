@@ -1,31 +1,25 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <f:entry title="Application Name" field="applicationName">
-        <f:textbox default="$${JOB_NAME}" />
-    </f:entry>
-    <f:entry title="Deployment Name" field="deploymentName">
-        <f:textbox default="$${BUILD_NUMBER}" />
-    </f:entry>
 	<f:entry title="Active Time Window (minutes)" field="activeTimespan">
-        <f:textbox default="60" />
+        <f:textbox default="1440" />
     </f:entry>
     	<f:entry title="Baseline Time Window (minutes)" field="baselineTimespan">
-        <f:textbox default="10080" />
+        <f:textbox default="20160" />
     </f:entry>
     <f:entry title="Critical Exception types" field="criticalExceptionTypes">
-        <f:textbox default="NullPointerException,IndexOutOfBoundsException,InvalidCastException"/>
+        <f:textbox default="NullPointerException,IndexOutOfBoundsException,ClassCastException,AssertionError,ArithmeticException"/>
     </f:entry>
     <f:entry title="Event Volume Threshold" field="minVolumeThreshold">
-        <f:textbox default="20"/>
+        <f:textbox default="50"/>
     </f:entry>
-    <f:entry title="Error Rate Threshold (0-1)" field="minErrorRateThreshold">
+    <f:entry title="Error Rate Threshold" field="minErrorRateThreshold">
         <f:textbox default="0.1"/>
     </f:entry>
-    <f:entry title="Regression Delta (0-1)" field="reggressionDelta">
-        <f:textbox default="0.15"/>
+    <f:entry title="Regression Delta" field="reggressionDelta">
+        <f:textbox default="0.5"/>
     </f:entry>
-    <f:entry title="Critical Regression Threshold (0-1)" field="criticalRegressionDelta">
-        <f:textbox default="0.25"/>
+    <f:entry title="Critical Regression Threshold" field="criticalRegressionDelta">
+        <f:textbox default="1"/>
     </f:entry>
      <f:entry title="Apply Seasonality" field="applySeasonality">
         <f:checkbox default="true"/>
