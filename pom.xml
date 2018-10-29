@@ -8,7 +8,7 @@
 		<version>3.2</version>
 	</parent>
 	<artifactId>overops-query</artifactId>
-	<version>1.0.15-SNAPSHOT</version>
+	<version>1.0.16-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<properties>
 		<!-- Baseline Jenkins version you use to build the plugin. Users must have 
