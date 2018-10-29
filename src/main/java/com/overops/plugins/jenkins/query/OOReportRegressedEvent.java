@@ -1,6 +1,7 @@
 package com.overops.plugins.jenkins.query;
 
-import com.takipi.common.api.result.event.EventResult;
+import com.takipi.api.client.result.event.EventResult;
+import com.takipi.api.client.util.regression.RegressionStringUtil;
 
 public class OOReportRegressedEvent extends OOReportEvent{
 
@@ -17,16 +18,7 @@ public class OOReportRegressedEvent extends OOReportEvent{
     
     @Override
     public String getEventRate() {
-    	
-    		double rate = (double)baselineHits / (double)baselineInvocations * 100; 	
-    		
-    		StringBuilder result = new StringBuilder();
-    		result.append(super.getEventRate());
-    		result.append(" from ");
-    		result.append(decimalFormat.format(rate));
-    		result.append("%");
-    		
-    		return result.toString();
+    		return RegressionStringUtil.getRegressedEventRate(event, baselineHits, baselineInvocations);
 	}
     
     public long getBaselineHits() {

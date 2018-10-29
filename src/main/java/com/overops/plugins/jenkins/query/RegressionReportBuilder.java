@@ -2,20 +2,20 @@ package com.overops.plugins.jenkins.query;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import com.overops.common.api.util.ApiEventUtil;
-import com.overops.common.util.RegressionUtil;
-import com.overops.common.util.RegressionUtil.RateRegression;
-import com.overops.common.util.RegressionUtil.RegressionResult;
-import com.takipi.common.api.ApiClient;
-import com.takipi.common.api.result.event.EventResult;
+import com.takipi.api.client.ApiClient;
+import com.takipi.api.client.result.event.EventResult;
+import com.takipi.api.client.util.event.EventUtil;
+import com.takipi.api.client.util.regression.RateRegression;
+import com.takipi.api.client.util.regression.RegressionInput;
+import com.takipi.api.client.util.regression.RegressionResult;
+import com.takipi.api.client.util.regression.RegressionStringUtil;
+import com.takipi.api.client.util.regression.RegressionUtil;
 
 public class RegressionReportBuilder {
-
+	
 	public static class RegressionReport {
 
 		private final List<OOReportEvent> newIssues;
@@ -53,31 +53,18 @@ public class RegressionReportBuilder {
 	
 	public static String getArcLink(ApiClient apiClient, String serviceId, String eventId, int timespan) {
 
-		String result = ApiEventUtil.getEventRecentLink(apiClient, serviceId, eventId, timespan);
+		String result = EventUtil.getEventRecentLink(apiClient, serviceId, eventId, timespan);
 
 		return result;
 	}     
 
-	public static RegressionReport execute(ApiClient apiClient, String serviceId, String viewId, int activeTimespan,
-			int baselineTimespan, String criticalExceptionTypes, int minVolumeThreshold, double minErrorRateThreshold,
-			double reggressionDelta, double criticalReggressionDelta, boolean applySeasonality, PrintStream output,
+	public static RegressionReport execute(ApiClient apiClient, RegressionInput input, PrintStream output,
 			boolean verbose) {
 
-		Collection<String> criticalExceptionTypeList;
-
-		if (criticalExceptionTypes != null) {
-			criticalExceptionTypeList = Arrays.asList(criticalExceptionTypes.split(","));
-		} else {
-			criticalExceptionTypeList = Collections.emptyList();
-		}
-
-		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, serviceId,
-				viewId, activeTimespan, baselineTimespan, minVolumeThreshold, minErrorRateThreshold,
-				reggressionDelta, criticalReggressionDelta, applySeasonality, criticalExceptionTypeList, 
-				output, verbose);
-		
-		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, serviceId, baselineTimespan, rateRegression);
-		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, serviceId, baselineTimespan, rateRegression);
+		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, input, output, verbose);
+				
+		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, input.serviceId, input.baselineTimespan, rateRegression);
+		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, input.serviceId, input.baselineTimespan, rateRegression);
 
 		boolean unstable = (rateRegression.getCriticalNewEvents().size() > 0)
 				|| (rateRegression.getExceededNewEvents().size() > 0)
@@ -119,7 +106,7 @@ public class RegressionReportBuilder {
 			
 			String arcLink = getArcLink(apiClient, serviceId, event.id, timespan);
 	
-			OOReportEvent newEvent = new OOReportEvent(event, OOReportEvent.NEW_ISSUE, arcLink);
+			OOReportEvent newEvent = new OOReportEvent(event, RegressionStringUtil.NEW_ISSUE, arcLink);
 	
 			result.add(newEvent);
 		}
@@ -134,10 +121,10 @@ public class RegressionReportBuilder {
 		List<OOReportEvent> result = new ArrayList<OOReportEvent>();
 		
 		result.addAll(getReportSevereEvents(apiClient, serviceId, baselineTimespan,
-			rateRegression.getCriticalNewEvents().values(), OOReportEvent.SEVERE_NEW));
+			rateRegression.getCriticalNewEvents().values(), RegressionStringUtil.SEVERE_NEW));
 		
 		result.addAll(getReportSevereEvents(apiClient, serviceId, baselineTimespan,
-			rateRegression.getExceededNewEvents().values(), OOReportEvent.SEVERE_NEW));
+			rateRegression.getExceededNewEvents().values(), RegressionStringUtil.SEVERE_NEW));
 		
 		result.addAll(getReportNewEvents(apiClient, serviceId, baselineTimespan, rateRegression));
 		
@@ -154,7 +141,7 @@ public class RegressionReportBuilder {
 			String arcLink = getArcLink(apiClient, serviceId, regressionResult.getEvent().id, timespan);
 
 			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(regressionResult.getEvent(),
-					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), OOReportEvent.SEVERE_REGRESSION, arcLink);
+					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), RegressionStringUtil.SEVERE_REGRESSION, arcLink);
 
 			result.add(regressedEvent);
 		}
@@ -168,7 +155,7 @@ public class RegressionReportBuilder {
 			String arcLink = getArcLink(apiClient, serviceId, regressionResult.getEvent().id, timespan);
 
 			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(regressionResult.getEvent(),
-					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), OOReportEvent.REGRESSION, arcLink);
+					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), RegressionStringUtil.REGRESSION, arcLink);
 
 			result.add(regressedEvent);
 		}

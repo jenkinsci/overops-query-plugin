@@ -5,8 +5,8 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
-import com.takipi.common.api.ApiClient;
-import com.takipi.common.api.url.UrlClient.Response;
+import com.takipi.api.client.ApiClient;
+import com.takipi.api.core.url.UrlClient.Response;
 
 import hudson.Extension;
 import hudson.model.AbstractProject;

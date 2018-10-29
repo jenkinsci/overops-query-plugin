@@ -26,14 +26,19 @@ package com.overops.plugins.jenkins.query;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import com.overops.common.api.util.ApiViewUtil;
 import com.overops.plugins.jenkins.query.RegressionReportBuilder.RegressionReport;
-import com.takipi.common.api.ApiClient;
-import com.takipi.common.api.data.view.SummarizedView;
+import com.takipi.api.client.ApiClient;
+import com.takipi.api.client.data.view.SummarizedView;
+import com.takipi.api.client.util.regression.RegressionInput;
+import com.takipi.api.client.util.view.ViewUtil;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -47,6 +52,8 @@ import jenkins.tasks.SimpleBuildStep;
 
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	
+	private static final String SEPERATOR = "'";
+
 	private final int activeTimespan;
 	private final int baselineTimespan;
 
@@ -55,7 +62,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private final int minVolumeThreshold;
 	private final double minErrorRateThreshold;
 
-	private final double reggressionDelta;
+	private final double regressionDelta;
 	private final double criticalRegressionDelta;
 	
 	private final boolean applySeasonality;
@@ -77,7 +84,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			int activeTimespan, int baselineTimespan,
 			String criticalExceptionTypes,
 			int minVolumeThreshold, double minErrorRateThreshold, 
-			double reggressionDelta, double criticalRegressionDelta, 
+			double regressionDelta, double criticalRegressionDelta, 
 			boolean applySeasonality, boolean markUnstable, boolean showResults, 
 			boolean verbose, String serviceId,
 			int serverWait) {
@@ -95,7 +102,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.minVolumeThreshold = minVolumeThreshold;
 
 		this.applySeasonality = applySeasonality;
-		this.reggressionDelta = reggressionDelta;
+		this.regressionDelta = regressionDelta;
 		this.criticalRegressionDelta = criticalRegressionDelta;
 
 		this.serviceId = serviceId;
@@ -133,8 +140,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	        return minVolumeThreshold;
 	    }
 	   
-	   public double getreggressionDelta() {
-	        return reggressionDelta;
+	   public double getregressionDelta() {
+	        return regressionDelta;
 	    }
 	   
 	   public double getcriticalRegressionDelta() {
@@ -168,6 +175,29 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	@Override
 	public DescriptorImpl getDescriptor() {
 		return (DescriptorImpl) super.getDescriptor();
+	}
+	
+	private static boolean isResolved(String value) {
+		boolean isVar = (value.startsWith("${") && (value.endsWith("}")));
+		return !isVar;
+	}
+	
+	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name) {
+		
+		if (!isResolved(value)) {
+			printStream.println("Value " + value + " is unresolved for " + name);
+			return Collections.emptySet();
+		}
+		
+		Collection<String> result;
+
+		if (value != null) {	
+			result =  Arrays.asList(value.trim().split(Pattern.quote(SEPERATOR)));
+		} else {
+			result = Collections.emptyList();
+		}
+		
+		return result;
 	}
 
 	@Override
@@ -210,10 +240,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		
 		ApiClient apiClient = ApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 		
-		SummarizedView allEventsView = ApiViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
+		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
 
 		if (allEventsView == null) {
-			throw new IllegalStateException("Could not acquire ID for All events view");
+			throw new IllegalStateException("Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
 		}
 		
 		if (serverWait > 0) {
@@ -225,10 +255,25 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			TimeUnit.SECONDS.sleep(serverWait);
 		}
 		
-		RegressionReport report = RegressionReportBuilder.execute(apiClient, serviceId, 
-			allEventsView.id, activeTimespan, baselineTimespan, criticalExceptionTypes, 
-			minVolumeThreshold, minErrorRateThreshold, reggressionDelta, criticalRegressionDelta,
-			applySeasonality, printStream, verbose);
+		RegressionInput input = new RegressionInput();
+		
+		input.serviceId = serviceId;
+		input.viewId = allEventsView.id;
+		input.activeTimespan =  activeTimespan;
+		input.baselineTimespan = baselineTimespan;
+		input.minVolumeThreshold = minVolumeThreshold;
+		input.minErrorRateThreshold = minErrorRateThreshold;
+		input.regressionDelta = regressionDelta;
+		input.criticalRegressionDelta = criticalRegressionDelta;
+		input.applySeasonality = applySeasonality;
+		
+		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
+		input.applictations = parseArrayString(applicationName, printStream, "Application Name");
+		input.deployments = parseArrayString(deploymentName, printStream, "Deployment Name");
+	
+		input.validate();
+
+		RegressionReport report = RegressionReportBuilder.execute(apiClient, input, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);
