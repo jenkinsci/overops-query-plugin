@@ -13,7 +13,7 @@
         <f:textbox default="10080" />
     </f:entry>
     <f:entry title="Critical Exception types" field="criticalExceptionTypes">
-        <f:textbox default="NullPointerException,IndexOutOfBoundsException,InvalidCastException"/>
+        <f:textbox default="NullPointerException,IndexOutOfBoundsException,InvalidCastException,AssertionError"/>
     </f:entry>
     <f:entry title="Event Volume Threshold" field="minVolumeThreshold">
         <f:textbox default="20"/>
@@ -21,11 +21,11 @@
     <f:entry title="Error Rate Threshold (0-1)" field="minErrorRateThreshold">
         <f:textbox default="0.1"/>
     </f:entry>
-    <f:entry title="Regression Delta (0-1)" field="reggressionDelta">
-        <f:textbox default="0.15"/>
+    <f:entry title="Regression Delta (0-1)" field="regressionDelta">
+        <f:textbox default="0.5"/>
     </f:entry>
     <f:entry title="Critical Regression Threshold (0-1)" field="criticalRegressionDelta">
-        <f:textbox default="0.25"/>
+        <f:textbox default="1"/>
     </f:entry>
      <f:entry title="Apply Seasonality" field="applySeasonality">
         <f:checkbox default="true"/>

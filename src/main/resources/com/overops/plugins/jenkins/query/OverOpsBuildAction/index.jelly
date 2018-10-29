@@ -14,7 +14,7 @@
 		</style>
         <l:main-panel>
             <h1><img src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Reliability Report</h1>
-            <h2>${it.newEvents.size()} new events, ${it.regressedEvents.size()} regressions in build #${it.buildNumber}</h2>
+            <h2>${it.summary} in build #${it.buildNumber}</h2>
             <table style="width:100%">
             <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
              <j:forEach items="${it.allIssues}" var="i">
