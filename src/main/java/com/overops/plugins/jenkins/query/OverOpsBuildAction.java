@@ -77,6 +77,14 @@ public class OverOpsBuildAction implements Action {
 		if (result.length() == 0) {
 			result.append("No issues found");
 		}
+	
+		String regName = RegressionStringUtil.getRegressionName(regressionReport.getInput(), 
+			regressionReport.getRegression().getActiveWndowStart());
+		
+		if (regName != null) {
+			result.append(" in ");
+			result.append(regName);
+		}
 
 		return result.toString();
 	}

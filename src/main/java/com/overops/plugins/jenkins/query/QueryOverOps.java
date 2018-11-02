@@ -184,19 +184,17 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	
 	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name) {
 		
-		if (!isResolved(value)) {
-			printStream.println("Value " + value + " is unresolved for " + name);
+		if ((value == null) || (value.isEmpty())) {
 			return Collections.emptySet();
 		}
 		
-		Collection<String> result;
-
-		if (value != null) {	
-			result =  Arrays.asList(value.trim().split(Pattern.quote(SEPERATOR)));
-		} else {
-			result = Collections.emptyList();
+		if (!isResolved(value)) {
+			printStream.println("Value " + value + " is unresolved for " + name + ". Ignoring.");
+			return Collections.emptySet();
 		}
 		
+		Collection<String> result = Arrays.asList(value.trim().split(Pattern.quote(SEPERATOR)));
+
 		return result;
 	}
 
