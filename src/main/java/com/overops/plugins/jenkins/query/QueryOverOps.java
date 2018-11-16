@@ -144,6 +144,11 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	        return regressionDelta;
 	    }
 	   
+	   public String getcriticalExceptionTypes() {
+	        return criticalExceptionTypes;
+	    }
+	   
+	   
 	   public double getcriticalRegressionDelta() {
 	        return criticalRegressionDelta;
 	    }
@@ -253,6 +258,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			TimeUnit.SECONDS.sleep(serverWait);
 		}
 		
+		
+		
 		RegressionInput input = new RegressionInput();
 		
 		input.serviceId = serviceId;
@@ -266,8 +273,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		input.applySeasonality = applySeasonality;
 		
 		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
-		input.applictations = parseArrayString(applicationName, printStream, "Application Name");
-		input.deployments = parseArrayString(deploymentName, printStream, "Deployment Name");
+		input.applictations = parseArrayString(run.getEnvironment(listener).expand(applicationName), printStream, "Application Name");
+		input.deployments = parseArrayString(run.getEnvironment(listener).expand(deploymentName), printStream, "Deployment Name");
 	
 		input.validate();
 
