@@ -6,6 +6,9 @@
     <f:entry title="Deployment Name" field="deploymentName">
         <f:textbox default="$${BUILD_NUMBER}" />
     </f:entry>
+    <f:entry title="Max Error Volume" field="maxErrorVolume">
+        <f:textbox default="0" />
+    </f:entry>
 	<f:entry title="Active Time Window (minutes)" field="activeTimespan">
         <f:textbox default="60" />
     </f:entry>
@@ -35,6 +38,9 @@
     </f:entry>
     <f:entry title="Mark Build Unstable" field="markUnstable">
         <f:checkbox default="true"/>
+    </f:entry>
+    <f:entry title="Show Top Issues" field="printTopIssues">
+        <f:textbox default="5"/>
     </f:entry>
      <f:entry title="Show Query Results" field="showResults">
         <f:checkbox />

@@ -35,6 +35,14 @@ public class OverOpsBuildAction implements Action {
 		return "OverOpsReport";
 	}
 
+	public boolean getHasTopIssues() {
+		return regressionReport.getTopIssues().size() > 0;
+	}
+	
+	public String getTopIssuesTitle() {
+		return String.format("Top %d Issues", regressionReport.getTopIssues().size());
+	}
+	
 	public String getSummary() {
 
 		StringBuilder result = new StringBuilder();
@@ -85,6 +93,14 @@ public class OverOpsBuildAction implements Action {
 			result.append(" in ");
 			result.append(regName);
 		}
+		
+		if ((regressionReport.getMaxEventVolume() > 0) && 
+			(regressionReport.getEventVolume() > regressionReport.getMaxEventVolume())) {
+			result.append(". Error volume " );
+			result.append(regressionReport.getEventVolume());
+			result.append(" exceeded max ");
+			result.append(regressionReport.getMaxEventVolume());
+		}
 
 		return result.toString();
 	}
@@ -121,6 +137,10 @@ public class OverOpsBuildAction implements Action {
 
 	public List<OOReportEvent> getAllIssues() {
 		return regressionReport.getAllIssues();
+	}
+	
+	public List<OOReportEvent> getTopIssues() {
+		return regressionReport.getTopIssues();
 	}
 
 	public int getBuildNumber() {

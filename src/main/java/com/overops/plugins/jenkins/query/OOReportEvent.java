@@ -14,6 +14,10 @@ public class OOReportEvent {
 		this.arcLink = arcLink;
 		this.type = type;
 	}
+	
+	public EventResult getEvent() {
+		return event;
+	}
 
 	public String getEventSummary() {
 		
