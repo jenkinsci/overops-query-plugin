@@ -21,6 +21,15 @@
                 <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
              </j:forEach>
             </table>
+            <j:if test="${it.hasTopIssues}">
+            <h2>${it.topIssuesTitle}</h2>
+            <table style="width:100%">
+            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+             <j:forEach items="${it.topIssues}" var="k">
+                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+             </j:forEach>
+            </table>
+            </j:if>
         </l:main-panel>
     </l:layout>
 </j:jelly>

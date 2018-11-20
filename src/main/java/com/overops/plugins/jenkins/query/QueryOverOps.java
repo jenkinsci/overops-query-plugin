@@ -50,62 +50,68 @@ import hudson.tasks.Recorder;
 import hudson.util.Secret;
 import jenkins.tasks.SimpleBuildStep;
 
-public class QueryOverOps extends Recorder implements SimpleBuildStep {
+public class QueryOverOps extends Recorder implements SimpleBuildStep
+{
 	
 	private static final String SEPERATOR = "'";
-
+	
 	private final int activeTimespan;
 	private final int baselineTimespan;
-
+	
 	private final String criticalExceptionTypes;
-
+	
 	private final int minVolumeThreshold;
 	private final double minErrorRateThreshold;
-
+	
 	private final double regressionDelta;
 	private final double criticalRegressionDelta;
 	
 	private final boolean applySeasonality;
-
+	
 	private final int serverWait;
 	
 	private final boolean showResults;
 	private final boolean verbose;
+	
+	private final int printTopIssues;
+	private final int maxErrorVolume;
 	
 	private final String serviceId;
 	
 	private final boolean markUnstable;
 	private String applicationName;
 	private String deploymentName;
-
 	
 	@DataBoundConstructor
 	public QueryOverOps(String applicationName, String deploymentName,
 			int activeTimespan, int baselineTimespan,
 			String criticalExceptionTypes,
-			int minVolumeThreshold, double minErrorRateThreshold, 
-			double regressionDelta, double criticalRegressionDelta, 
-			boolean applySeasonality, boolean markUnstable, boolean showResults, 
+			int minVolumeThreshold, double minErrorRateThreshold,
+			double regressionDelta, double criticalRegressionDelta,
+			boolean applySeasonality, boolean markUnstable, boolean showResults,
+			int printTopIssues, int maxErrorVolume,
 			boolean verbose, String serviceId,
-			int serverWait) {
-			
-		 
+			int serverWait)
+	{
+		
+		this.serviceId = serviceId;
 		
 		this.applicationName = applicationName;
 		this.deploymentName = deploymentName;
 		this.criticalExceptionTypes = criticalExceptionTypes;
-
+		
 		this.activeTimespan = activeTimespan;
 		this.baselineTimespan = baselineTimespan;
-
+		
 		this.minErrorRateThreshold = minErrorRateThreshold;
 		this.minVolumeThreshold = minVolumeThreshold;
-
+		
 		this.applySeasonality = applySeasonality;
 		this.regressionDelta = regressionDelta;
 		this.criticalRegressionDelta = criticalRegressionDelta;
-
-		this.serviceId = serviceId;
+		
+		this.maxErrorVolume = maxErrorVolume;
+		this.printTopIssues = printTopIssues;
 		
 		this.serverWait = serverWait;
 		this.verbose = verbose;
@@ -115,106 +121,138 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	
 	//getters() needed for config.jelly
 	
-	   public String getapplicationName() {
-	        return applicationName;
-	    }
-	   
-	   public String getdeploymentName() {
-	        return deploymentName;
-	    }
-	   
-	   public int getactiveTimespan() {
-	        return activeTimespan;
-	    }
-	   
-	   public int getbaselineTimespan() {
-	        return baselineTimespan;
-	    }
-	   
-	   
-	   public double getminErrorRateThreshold() {
-	        return minErrorRateThreshold;
-	    }
-	   
-	   public double getminVolumeThreshold() {
-	        return minVolumeThreshold;
-	    }
-	   
-	   public double getregressionDelta() {
-	        return regressionDelta;
-	    }
-	   
-	   public String getcriticalExceptionTypes() {
-	        return criticalExceptionTypes;
-	    }
-	   
-	   
-	   public double getcriticalRegressionDelta() {
-	        return criticalRegressionDelta;
-	    }
-	   
-	   public String getserviceId() {
-	        return serviceId;
-	    }
-	   
-	   public int getserverWait() {
-	        return serverWait;
-	    }
-	   
-	   public boolean getverbose() {
-	        return verbose;
-	    }
-	   
-	   public boolean getshowResults() {
-	        return showResults;
-	    }
-	   
-	   public boolean getmarkUnstable() {
-	        return markUnstable;
-	    }
-
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.NONE;
-	}
-
-	@Override
-	public DescriptorImpl getDescriptor() {
-		return (DescriptorImpl) super.getDescriptor();
+	public String getapplicationName()
+	{
+		return applicationName;
 	}
 	
-	private static boolean isResolved(String value) {
+	public String getdeploymentName()
+	{
+		return deploymentName;
+	}
+	
+	public int getactiveTimespan()
+	{
+		return activeTimespan;
+	}
+	
+	public int getbaselineTimespan()
+	{
+		return baselineTimespan;
+	}
+	
+	public double getminErrorRateThreshold()
+	{
+		return minErrorRateThreshold;
+	}
+	
+	public double getminVolumeThreshold()
+	{
+		return minVolumeThreshold;
+	}
+	
+	public double getregressionDelta()
+	{
+		return regressionDelta;
+	}
+	
+	public String getcriticalExceptionTypes()
+	{
+		return criticalExceptionTypes;
+	}
+	
+	public double getcriticalRegressionDelta()
+	{
+		return criticalRegressionDelta;
+	}
+	
+	public String getserviceId()
+	{
+		return serviceId;
+	}
+	
+	public int getserverWait()
+	{
+		return serverWait;
+	}
+	
+	public boolean getverbose()
+	{
+		return verbose;
+	}
+	
+	public boolean getshowResults()
+	{
+		return showResults;
+	}
+	
+	public int getmaxErrorVolume()
+	{
+		return maxErrorVolume;
+	}
+	
+	public int getprintTopIssues()
+	{
+		return printTopIssues;
+	}
+	
+	public boolean getmarkUnstable()
+	{
+		return markUnstable;
+	}
+	
+	@Override
+	public BuildStepMonitor getRequiredMonitorService()
+	{
+		return BuildStepMonitor.NONE;
+	}
+	
+	@Override
+	public DescriptorImpl getDescriptor()
+	{
+		return (DescriptorImpl)super.getDescriptor();
+	}
+	
+	private static boolean isResolved(String value)
+	{
 		boolean isVar = (value.startsWith("${") && (value.endsWith("}")));
 		return !isVar;
 	}
 	
-	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name) {
+	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name)
+	{
 		
-		if ((value == null) || (value.isEmpty())) {
+		if ((value == null) || (value.isEmpty()))
+		{
 			return Collections.emptySet();
 		}
 		
-		if (!isResolved(value)) {
+		if (!isResolved(value))
+		{
 			printStream.println("Value " + value + " is unresolved for " + name + ". Ignoring.");
 			return Collections.emptySet();
 		}
 		
 		Collection<String> result = Arrays.asList(value.trim().split(Pattern.quote(SEPERATOR)));
-
+		
 		return result;
 	}
-
+	
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-			throws InterruptedException, IOException {
-
+			throws InterruptedException, IOException
+	{
+		
 		String apiHost = getDescriptor().getOverOpsURL();
 		String apiKey = Secret.toString(getDescriptor().getOverOpsAPIKey());
 		
-		if (apiHost == null) {
+		if (apiHost == null)
+		{
 			throw new IllegalArgumentException("Missing host name");
-		} 
+		}
 		
-		if (apiKey == null) {
+		if (apiKey == null)
+		{
 			throw new IllegalArgumentException("Missing api key");
 		}
 		
@@ -229,42 +267,48 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			serviceId = getDescriptor().getOverOpsSID();
 		}
 		
-		if (serviceId == null) {
+		if (serviceId == null)
+		{
 			throw new IllegalArgumentException("Missing environment Id");
 		}
 		
 		PrintStream printStream;
 		
-		if (showResults) {
+		if (showResults)
+		{
 			printStream = listener.getLogger();
-		} else {
-			printStream = null;	
+		}
+		else
+		{
+			printStream = null;
 		}
 		
 		ApiClient apiClient = ApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 		
 		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
-
-		if (allEventsView == null) {
-			throw new IllegalStateException("Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
+		
+		if (allEventsView == null)
+		{
+			throw new IllegalStateException(
+					"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
 		}
 		
-		if (serverWait > 0) {
-			 
-			if (showResults) {
+		if (serverWait > 0)
+		{
+			
+			if ((showResults) && (printStream != null))
+			{
 				printStream.println("Waiting " + serverWait + " seconds for code analysis to complete");
 			}
 			
 			TimeUnit.SECONDS.sleep(serverWait);
 		}
 		
-		
-		
 		RegressionInput input = new RegressionInput();
 		
 		input.serviceId = serviceId;
 		input.viewId = allEventsView.id;
-		input.activeTimespan =  activeTimespan;
+		input.activeTimespan = activeTimespan;
 		input.baselineTimespan = baselineTimespan;
 		input.minVolumeThreshold = minVolumeThreshold;
 		input.minErrorRateThreshold = minErrorRateThreshold;
@@ -272,18 +316,26 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		input.criticalRegressionDelta = criticalRegressionDelta;
 		input.applySeasonality = applySeasonality;
 		
-		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
-		input.applictations = parseArrayString(run.getEnvironment(listener).expand(applicationName), printStream, "Application Name");
-		input.deployments = parseArrayString(run.getEnvironment(listener).expand(deploymentName), printStream, "Deployment Name");
-	
+		String expandedAppName = run.getEnvironment(listener).expand(applicationName);
+		String expandedDepName = run.getEnvironment(listener).expand(deploymentName);
+		
+		input.criticalExceptionTypes =
+				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
+		input.criticalExceptionTypes =
+				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
+		input.applictations = parseArrayString(expandedAppName, printStream, "Application Name");
+		input.deployments = parseArrayString(expandedDepName, printStream, "Deployment Name");
+		
 		input.validate();
-
-		RegressionReport report = RegressionReportBuilder.execute(apiClient, input, printStream, verbose);
+		
+		RegressionReport report = RegressionReportBuilder.execute(apiClient, 
+			input, maxErrorVolume, printTopIssues, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);
- 
-		if ((markUnstable) && (report.getUnstable())) {
+		
+		if ((markUnstable) && (report.getUnstable()))
+		{
 			run.setResult(Result.UNSTABLE);
 		}
 	}
