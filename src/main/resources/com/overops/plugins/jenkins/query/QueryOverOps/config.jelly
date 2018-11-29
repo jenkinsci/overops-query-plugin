@@ -9,6 +9,9 @@
     <f:entry title="Max Error Volume" field="maxErrorVolume">
         <f:textbox default="0" />
     </f:entry>
+    <f:entry title="Max Unique Error Count" field="maxUniqueErrors">
+        <f:textbox default="0" />
+    </f:entry>
 	<f:entry title="Active Time Window (minutes)" field="activeTimespan">
         <f:textbox default="60" />
     </f:entry>

@@ -83,7 +83,7 @@ public class OverOpsBuildAction implements Action {
 		appendSummaryValue(result, RegressionStringUtil.REGRESSION, regressions, false);
 
 		if (result.length() == 0) {
-			result.append("No issues found");
+			result.append("No new errors or regressions found");
 		}
 	
 		String regName = RegressionStringUtil.getRegressionName(regressionReport.getInput(), 
@@ -94,13 +94,25 @@ public class OverOpsBuildAction implements Action {
 			result.append(regName);
 		}
 		
-		if ((regressionReport.getMaxEventVolume() > 0) && 
-			(regressionReport.getEventVolume() > regressionReport.getMaxEventVolume())) {
+		boolean eventVolumeExeeded = (regressionReport.getMaxEventVolume() > 0) && 
+				(regressionReport.getEventVolume() > regressionReport.getMaxEventVolume());
+		
+		if (eventVolumeExeeded) {
 			result.append(". Error volume " );
 			result.append(regressionReport.getEventVolume());
 			result.append(" exceeded max ");
 			result.append(regressionReport.getMaxEventVolume());
 		}
+		
+		boolean uniqueErrorCountExceeded = (regressionReport.getMaxUniqueEvents() > 0) && 
+				(regressionReport.getUniqueEventsCount() > regressionReport.getMaxUniqueEvents());
+		
+		if (uniqueErrorCountExceeded) {
+				result.append(". Unique error count " );
+				result.append(regressionReport.getUniqueEventsCount());
+				result.append(" exceeded max ");
+				result.append(regressionReport.getMaxUniqueEvents());
+			}
 
 		return result.toString();
 	}

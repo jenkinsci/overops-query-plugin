@@ -4,7 +4,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
@@ -31,11 +33,14 @@ public class RegressionReportBuilder {
 		private final RateRegression regression;
 		private final long eventVolume;
 		private final int maxEventVolume;
+		private final int uniqueEventsCount;
+		private final int maxUniqueEvents;
 
 		protected RegressionReport(RegressionInput input, RateRegression regression,
 			List<OOReportEvent> newIssues, List<OOReportRegressedEvent> regressions, 
 			List<OOReportEvent> topIssues, 
 			long eventVolume, int maxEventVolume,
+			int uniqueEventCounts, int maxUniqueEvents,
 			boolean unstable) {
 			
 			this.input = input;
@@ -51,6 +56,8 @@ public class RegressionReportBuilder {
 						
 			this.eventVolume =  eventVolume;
 			this.maxEventVolume = maxEventVolume;
+			this.uniqueEventsCount =  uniqueEventCounts;
+			this.maxUniqueEvents = maxUniqueEvents;
 			
 			this.unstable = unstable;
 		}
@@ -77,6 +84,14 @@ public class RegressionReportBuilder {
 		
 		public List<OOReportEvent> getTopIssues() {
 			return topIssues;
+		}
+		
+		public int getMaxUniqueEvents() {
+			return maxUniqueEvents; 
+		}
+		
+		public long getUniqueEventsCount() {
+			return uniqueEventsCount; 
 		}
 		
 		public int getMaxEventVolume() {
@@ -154,7 +169,7 @@ public class RegressionReportBuilder {
 		for (int i = 0; i < Math.min(limit, events.size()); i++) {
 			EventResult event = events.get(i);
 			String arcLink = getArcLink(apiClient, event.id, input, rateRegression);
-			result.add(new OOReportEvent(event, "moo", arcLink));
+			result.add(new OOReportEvent(event, null, arcLink));
 		}
 		
 		long volume = 0;
@@ -169,7 +184,7 @@ public class RegressionReportBuilder {
 	}
 		
 	public static RegressionReport execute(ApiClient apiClient, RegressionInput input, 
-			int maxEventVolume, int topEventLimit, PrintStream output, boolean verbose) {
+			int maxEventVolume, int maxUniqueErrors, int topEventLimit, PrintStream output, boolean verbose) {
 
 		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, input, output, verbose);	
 
@@ -179,16 +194,39 @@ public class RegressionReportBuilder {
 		Pair<List<OOReportEvent>, Long> highVolumeEvents = getHighVolumeEvents(apiClient, input, 
 				rateRegression, newIssues, regressions, rateRegression.getNonRegressions(), topEventLimit);
 		
-		boolean maxVolumeExeceeded = (maxEventVolume > 0) && (highVolumeEvents.getSecond().intValue() > maxEventVolume);
+		List<OOReportEvent> topEvents = highVolumeEvents.getFirst();
+		long eventVolume = highVolumeEvents.getSecond().longValue();
 		
+		int uniqueEventCount;
+		boolean maxUniqueErrorsExceeded;
+		boolean maxVolumeExceeded = (maxEventVolume > 0) && (eventVolume > maxEventVolume);
+		
+		if (maxUniqueErrors > 0) {
+			
+			Set<EventResult> uniqueEvents = new HashSet<EventResult>();
+	
+			uniqueEvents.addAll(rateRegression.getNonRegressions());
+			uniqueEvents.addAll(rateRegression.getAllNewEvents().values());
+			
+			for (RegressionResult regressionResult : rateRegression.getAllRegressions().values()) {
+				uniqueEvents.add(regressionResult.getEvent());
+			}
+			
+			uniqueEventCount	= uniqueEvents.size();	
+			maxUniqueErrorsExceeded = uniqueEventCount > maxUniqueErrors;
+		} else {
+			uniqueEventCount = 0;
+			maxUniqueErrorsExceeded = false;
+		}
+			
 		boolean unstable = (rateRegression.getCriticalNewEvents().size() > 0)
 				|| (rateRegression.getExceededNewEvents().size() > 0)
 				|| (rateRegression.getCriticalRegressions().size() > 0)
-				|| (maxVolumeExeceeded);
+				|| (maxVolumeExceeded)
+				|| (maxUniqueErrorsExceeded);
 		
-		return new RegressionReport(input, rateRegression, newIssues, 
-			regressions, highVolumeEvents.getFirst(), 
-			highVolumeEvents.getSecond().longValue(), maxEventVolume, unstable);
+		return new RegressionReport(input, rateRegression, newIssues, regressions,
+				topEvents, eventVolume, maxEventVolume, uniqueEventCount, maxUniqueErrors, unstable);
 	}
 
 	private static List<OOReportEvent> getReportSevereEvents(ApiClient apiClient, 
