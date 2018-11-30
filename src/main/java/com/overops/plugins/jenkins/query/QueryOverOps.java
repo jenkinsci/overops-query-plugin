@@ -39,6 +39,8 @@ import com.takipi.api.client.ApiClient;
 import com.takipi.api.client.data.view.SummarizedView;
 import com.takipi.api.client.util.regression.RegressionInput;
 import com.takipi.api.client.util.view.ViewUtil;
+import com.takipi.api.core.url.UrlClient.Operation;
+import com.takipi.api.core.url.UrlClient.UrlClientObserver;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -75,6 +77,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	
 	private final int printTopIssues;
 	private final int maxErrorVolume;
+	private final int maxUniqueErrors;
 	
 	private final String serviceId;
 	
@@ -89,7 +92,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 			int minVolumeThreshold, double minErrorRateThreshold,
 			double regressionDelta, double criticalRegressionDelta,
 			boolean applySeasonality, boolean markUnstable, boolean showResults,
-			int printTopIssues, int maxErrorVolume,
+			int printTopIssues, int maxErrorVolume, int maxUniqueErrors,
 			boolean verbose, String serviceId,
 			int serverWait)
 	{
@@ -111,6 +114,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		this.criticalRegressionDelta = criticalRegressionDelta;
 		
 		this.maxErrorVolume = maxErrorVolume;
+		this.maxUniqueErrors = maxUniqueErrors;
+		
 		this.printTopIssues = printTopIssues;
 		
 		this.serverWait = serverWait;
@@ -189,6 +194,11 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	public int getmaxErrorVolume()
 	{
 		return maxErrorVolume;
+	}
+	
+	public int getmaxUniqueErrors()
+	{
+		return maxUniqueErrors;
 	}
 	
 	public int getprintTopIssues()
@@ -285,6 +295,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		ApiClient apiClient = ApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 		
+		if ((printStream != null) && (showResults)) {
+			apiClient.addObserver(new ApiClientObserver(printStream, verbose));
+		}
+		
 		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
 		
 		if (allEventsView == null)
@@ -329,7 +343,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		input.validate();
 		
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, 
-			input, maxErrorVolume, printTopIssues, printStream, verbose);
+			input, maxErrorVolume, maxUniqueErrors, printTopIssues, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);
@@ -337,6 +351,36 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		if ((markUnstable) && (report.getUnstable()))
 		{
 			run.setResult(Result.UNSTABLE);
+		}
+	}
+
+	protected static class ApiClientObserver implements UrlClientObserver {
+	
+		private final PrintStream printStream;
+		private final boolean verbose;
+		
+		public ApiClientObserver(PrintStream printStream, boolean verbose) {
+			this.printStream = printStream;
+			this.verbose = verbose;
+		}
+		
+		@Override
+		public void observe(Operation operation, String url, String response, long time)
+		{
+			StringBuilder output = new StringBuilder();
+			
+			output.append(String.valueOf(operation));
+			output.append(" took ");
+			output.append(time / 1000);
+			output.append("ms for ");
+			output.append(url);
+			
+			if (verbose) {
+				output.append(". Response: ");
+				output.append(response);
+			}
+			
+			printStream.println(output.toString());
 		}
 	}
 }
