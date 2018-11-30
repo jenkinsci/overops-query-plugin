@@ -1,3 +1,14 @@
 com.takipi.common.api.result.event.EventResult
 com.takipi.common.api.data.event.Location
 com.takipi.common.api.data.event.Stats
+com.takipi.api.client.result.event.EventResult
+com.takipi.api.client.data.event.Location
+com.takipi.api.client.data.event.Stats
+com.takipi.api.client.util.regression.RegressionInput
+com.takipi.api.client.util.regression.RateRegression
+com.takipi.api.client.util.regression.RegressionResult
+org.joda.time.DateTime
+org.joda.time.chrono.ISOChronology
+org.joda.time.chrono.ISOChronology$Stub
+org.joda.time.UTCDateTimeZone
+org.joda.time.Chronology
