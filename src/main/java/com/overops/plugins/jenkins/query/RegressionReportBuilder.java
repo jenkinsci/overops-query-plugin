@@ -192,7 +192,7 @@ public class RegressionReportBuilder {
 		}
 		
 		String json = new Gson().toJson(event);
-		boolean result = pattern.matcher(json).find();
+		boolean result = !pattern.matcher(json).find();
 		
 		return result;
 	}
@@ -234,7 +234,7 @@ public class RegressionReportBuilder {
 		
 		if (allowEvent(event, pattern)) {
 			events.add(event);
-		} else if (output != null) {
+		} else if ((output != null) && (verbose)) {
 			output.println(event + " did not match regexFilter and was skipped");
 		}
 	}

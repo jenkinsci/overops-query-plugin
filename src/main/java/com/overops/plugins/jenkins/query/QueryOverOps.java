@@ -350,6 +350,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		input.validate();
 		
+		printInputs(printStream, input);
+		
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, 
 			input, maxErrorVolume, maxUniqueErrors, printTopIssues, regexFilter, printStream, verbose);
 		
@@ -359,6 +361,26 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		if ((markUnstable) && (report.getUnstable()))
 		{
 			run.setResult(Result.UNSTABLE);
+		}
+	}
+	
+	private void printInputs(PrintStream printStream, RegressionInput input) {
+	
+		if (printStream != null) {
+			printStream.println(input);
+			
+			printStream.println("Max unique errors  = " + maxUniqueErrors);
+			printStream.println("Max error volume  = " + maxErrorVolume);
+			
+			String regexPrint;
+			
+			if (regexFilter != null) {
+				regexPrint = regexFilter;
+			} else {
+				regexPrint = "";
+			}
+			
+			printStream.println("Regex filter  = " + regexPrint);
 		}
 	}
 

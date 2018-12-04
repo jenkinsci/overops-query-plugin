@@ -37,7 +37,7 @@
         <f:checkbox default="true"/>
     </f:entry>
      <f:entry title="Regex Filter" field="regexFilter">
-        <f:textbox default="&quot;type&quot;:\&quot;s*(Uncaught Exception|Caught Exception|Swallowed Exception|Logged Error|Logged Warning)"/>
+        <f:textbox default="&quot;type&quot;:\&quot;*(Timer|Logged Warning)"/>
     </f:entry>
     <f:entry title="Environment ID" field="serviceId">
         <f:textbox default=""/>
