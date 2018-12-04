@@ -1,11 +1,15 @@
 package com.overops.plugins.jenkins.query;
 
+import java.util.List;
+
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
 import com.takipi.api.client.ApiClient;
+import com.takipi.api.client.data.service.SummarizedService;
+import com.takipi.api.client.util.client.ClientUtil;
 import com.takipi.api.core.url.UrlClient.Response;
 
 import hudson.Extension;
@@ -44,10 +48,10 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 	// Allows for persisting global config settings in JSONObject
 	@Override
 	public boolean configure(StaplerRequest req, JSONObject formData) {
-		formData = formData.getJSONObject("QueryOverOps");
-		overOpsURL = formData.getString("overOpsURL");
-		overOpsSID = formData.getString("overOpsSID");
-		overOpsAPIKey = Secret.fromString(formData.getString("overOpsAPIKey"));
+		JSONObject QueryOverOpsJson = formData.getJSONObject("QueryOverOps");
+		overOpsURL = QueryOverOpsJson.getString("overOpsURL");
+		overOpsSID = QueryOverOpsJson.getString("overOpsSID");
+		overOpsAPIKey = Secret.fromString(QueryOverOpsJson.getString("overOpsAPIKey"));
 		save();
 		return false;
 	}
@@ -63,7 +67,29 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 	public Secret getOverOpsAPIKey() {
 		return overOpsAPIKey;
 	}
+	
+	private boolean hasAccessToService(ApiClient apiClient, String serviceId) {
+		
+		List<SummarizedService> services;
+		
+		try {
+			services = ClientUtil.getEnvironments(apiClient);
+		} catch (Exception e) {
+			System.err.println(e);
+			return false;
+		}
+		
 
+		for (SummarizedService service : services) {
+			if (service.id.equals(serviceId)) {
+				return true;
+			}
+		}
+		
+		return false;
+
+	}
+	
 	@POST
 	public FormValidation doTestConnection(@QueryParameter("overOpsURL") final String overOpsURL,
 			@QueryParameter("overOpsSID") final String overOpsSID,
@@ -78,17 +104,14 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		try {
 			String apiKey = Secret.toString(overOpsAPIKey);
-
 			ApiClient apiClient = ApiClient.newBuilder().setHostname(overOpsURL).setApiKey(apiKey).build();
+			
 			Response<String> response = apiClient.testConnection();
 			    
-			boolean success = (response != null) && (!response.isBadResponse());
+			boolean testConnection = (response == null) || (response.isBadResponse());
+			boolean testService = ((overOpsSID == null) || (hasAccessToService(apiClient, overOpsSID))); 
 			
-			if (success) {
-
-				return FormValidation.ok("Connection Successful.");
-			} else {
-				
+			if (!testConnection) {
 				int code;
 				
 				if (response != null) {
@@ -99,7 +122,12 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 				return FormValidation.error("Unable to connect to API server. Code: " + code);
 			}
-
+			
+			if (!testService) {
+				return FormValidation.error("API key has no access to environment " + overOpsSID);
+			}	
+			
+			return FormValidation.ok("Connection Successful.");
 		} catch (Exception e) {
 			return FormValidation.error(e, "REST API error : " + e.getMessage());
 		}

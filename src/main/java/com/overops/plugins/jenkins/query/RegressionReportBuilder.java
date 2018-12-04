@@ -7,9 +7,12 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 
+import com.google.common.base.Objects;
+import com.google.gson.Gson;
 import com.takipi.api.client.ApiClient;
 import com.takipi.api.client.result.event.EventResult;
 import com.takipi.api.client.util.event.EventUtil;
@@ -18,9 +21,60 @@ import com.takipi.api.client.util.regression.RegressionInput;
 import com.takipi.api.client.util.regression.RegressionResult;
 import com.takipi.api.client.util.regression.RegressionStringUtil;
 import com.takipi.api.client.util.regression.RegressionUtil;
-import com.takipi.common.util.Pair;
 
 public class RegressionReportBuilder {
+	
+	private static class UniqueEventKey {
+		
+		private EventResult event;
+		
+		protected UniqueEventKey(EventResult event) {
+			this.event = event;
+		}
+		
+		@Override
+		public int hashCode() {
+			
+			if (event.error_location == null) {
+				return super.hashCode();
+			}
+			
+			return event.error_location.hashCode();
+		}
+		
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (!(obj instanceof UniqueEventKey)) {
+				return false;
+			}
+			
+			UniqueEventKey other = (UniqueEventKey)obj;
+
+			
+			if (!Objects.equal(event.type, other.event.type)) {
+				return false;
+			}
+			
+			if (!Objects.equal(event.error_origin, other.event.error_origin)) {
+				return false;
+			}
+			
+			if (!Objects.equal(event.error_location, other.event.error_location)) {
+				return false;
+			}
+			
+			if (!Objects.equal(event.name, other.event.name)) {
+				return false;
+			}
+			
+			if (!Objects.equal(event.call_stack_group, other.event.call_stack_group)) {
+				return false;
+			}
+						
+			return true;
+		}
+	}
 	
 	public static class RegressionReport {
 
@@ -53,7 +107,7 @@ public class RegressionReportBuilder {
 			
 			allIssues.addAll(newIssues);
 			allIssues.addAll(regressions);
-						
+			
 			this.eventVolume =  eventVolume;
 			this.maxEventVolume = maxEventVolume;
 			this.uniqueEventsCount =  uniqueEventCounts;
@@ -120,26 +174,34 @@ public class RegressionReportBuilder {
 		return result;
 	}
 	
+	private static class ReportVolume {
+		protected long volume;
+		protected int eventCount;
+		protected List<OOReportEvent> topEvents;
+		protected boolean hasNewExceeded;
+		protected boolean hasNewCritical;
+		protected boolean hasCriticalRegression;
+		protected Collection<EventResult> filter;
+		
+	}
 	
-	private static Pair<List<OOReportEvent>, Long> getHighVolumeEvents(ApiClient apiClient, 
-			RegressionInput input, RateRegression rateRegression,
-			List<OOReportEvent> newIssues,List<OOReportRegressedEvent> regressions, 
-			Collection<EventResult> nonRegressions, int limit) {
+	private static boolean allowEvent(EventResult event, Pattern pattern) {
 		
-		List<EventResult> events = new ArrayList<EventResult>(newIssues.size() 
-			+ regressions.size() + nonRegressions.size());
-		
-		for (OOReportEvent reportEvent : newIssues) {
-			events.add(reportEvent.getEvent());
+		if (pattern == null ) {
+			return true;
 		}
 		
-		for (OOReportRegressedEvent regression : regressions) {
-			events.add(regression.getEvent());
-		}
+		String json = new Gson().toJson(event);
+		boolean result = pattern.matcher(json).find();
 		
-		events.addAll(nonRegressions);
+		return result;
+	}
+	
+	private static List<EventResult> getSortedEventsByVolume(Collection<EventResult> events) {
 		
-		events.sort(new Comparator<EventResult>()
+		List<EventResult> result = new ArrayList<EventResult>(events);
+		
+		result.sort(new Comparator<EventResult>()
 		{
 
 			@Override
@@ -164,79 +226,166 @@ public class RegressionReportBuilder {
 			}
 		});
 		
-		List<OOReportEvent> result = new ArrayList<OOReportEvent>();
+		return result;
+	}
+	
+	private static void addEvent(Set<EventResult> events, EventResult event, 
+		Pattern pattern, PrintStream output, boolean verbose) {
+		
+		if (allowEvent(event, pattern)) {
+			events.add(event);
+		} else if (output != null) {
+			output.println(event + " did not match regexFilter and was skipped");
+		}
+	}
+	
+	private static Collection<EventResult> filterEvents(RateRegression rateRegression,
+			Pattern pattern, PrintStream output, boolean verbose) {
+		
+		Set<EventResult> result = new HashSet<EventResult>();
+		
+		if (pattern != null) {
+		
+			for (EventResult event : rateRegression.getNonRegressions()) {
+				addEvent(result, event, pattern, output, verbose);
+			}
+			
+			for (EventResult event : rateRegression.getAllNewEvents().values()) {
+				addEvent(result, event, pattern, output, verbose);
+			}
+			
+			for (RegressionResult regressionResult : rateRegression.getAllRegressions().values()) {
+				addEvent(result, regressionResult.getEvent(), pattern, output, verbose);
+
+			}
+			
+		} else {
+			result.addAll(rateRegression.getNonRegressions());
+			result.addAll(rateRegression.getAllNewEvents().values());
+		
+			for (RegressionResult regressionResult : rateRegression.getAllRegressions().values()) {
+				result.add(regressionResult.getEvent());
+			}
+		}
+		
+		return result;
+	}
+	
+	private static ReportVolume getReportVolume(ApiClient apiClient, 
+			RegressionInput input, RateRegression rateRegression,
+			int limit, String regexFilter,  PrintStream output, boolean verbose) {
+		
+		ReportVolume result = new ReportVolume();
+		
+		Pattern pattern;
+		
+		if ((regexFilter != null) && (regexFilter.length() > 0)) {
+			pattern = Pattern.compile(regexFilter);
+		} else {
+			pattern = null;
+		}
+		
+		Collection<EventResult> eventsSet = filterEvents(rateRegression, pattern, output, verbose);		
+		List<EventResult> events =  getSortedEventsByVolume(eventsSet);
+		
+		if (pattern != null) {
+			result.filter = eventsSet;
+		}
+				
+		result.topEvents = new ArrayList<OOReportEvent>();
 		
 		for (int i = 0; i < Math.min(limit, events.size()); i++) {
 			EventResult event = events.get(i);
 			String arcLink = getArcLink(apiClient, event.id, input, rateRegression);
-			result.add(new OOReportEvent(event, null, arcLink));
+			result.topEvents.add(new OOReportEvent(event, arcLink));
 		}
-		
-		long volume = 0;
-		
+				
 		for (EventResult event : events) {
+			
 			if (event.stats != null) {
-				volume += event.stats.hits;
+				result.volume += event.stats.hits;
+			}
+			
+			if (rateRegression.getCriticalRegressions().containsKey(event.id)) {
+				result.hasCriticalRegression = true;
+			}
+			
+			if (rateRegression.getCriticalNewEvents().containsKey(event.id)) {
+				result.hasNewCritical = true;
+			}
+			
+			if (rateRegression.getSortedExceededNewEvents().contains(event)) {
+				result.hasNewExceeded = true;
 			}
 		}
 		
-		return Pair.of(result, Long.valueOf(volume));
+		result.eventCount = getUniqueErrorCount(events); 
+		
+		return result;
 	}
 		
+	private static int getUniqueErrorCount(Collection<EventResult> events) {
+		
+		Set<UniqueEventKey> grouped = new HashSet<UniqueEventKey>(events.size());
+		
+		for (EventResult event : events) {
+			UniqueEventKey uniqueEventKey = new UniqueEventKey(event);
+			grouped.add(uniqueEventKey);
+		}
+		
+		int result = grouped.size();
+		
+		return result;		
+	}
+	
 	public static RegressionReport execute(ApiClient apiClient, RegressionInput input, 
-			int maxEventVolume, int maxUniqueErrors, int topEventLimit, PrintStream output, boolean verbose) {
+			int maxEventVolume, int maxUniqueErrors, int topEventLimit, 
+			String regexFilter, PrintStream output, boolean verbose) {
 
 		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, input, output, verbose);	
 
-		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, input, rateRegression);
-		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, input, rateRegression);
-
-		Pair<List<OOReportEvent>, Long> highVolumeEvents = getHighVolumeEvents(apiClient, input, 
-				rateRegression, newIssues, regressions, rateRegression.getNonRegressions(), topEventLimit);
+		ReportVolume reportVolume = getReportVolume(apiClient, input, 
+				rateRegression, topEventLimit, regexFilter, output, verbose);
+			
+		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, input, rateRegression, reportVolume.filter);
+		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, input, rateRegression, reportVolume.filter);
 		
-		List<OOReportEvent> topEvents = highVolumeEvents.getFirst();
-		long eventVolume = highVolumeEvents.getSecond().longValue();
+		boolean maxUniqueErrorsExceeded;
+		boolean maxVolumeExceeded = (maxEventVolume > 0) && (reportVolume.volume > maxEventVolume);
 		
 		int uniqueEventCount;
-		boolean maxUniqueErrorsExceeded;
-		boolean maxVolumeExceeded = (maxEventVolume > 0) && (eventVolume > maxEventVolume);
 		
 		if (maxUniqueErrors > 0) {
-			
-			Set<EventResult> uniqueEvents = new HashSet<EventResult>();
-	
-			uniqueEvents.addAll(rateRegression.getNonRegressions());
-			uniqueEvents.addAll(rateRegression.getAllNewEvents().values());
-			
-			for (RegressionResult regressionResult : rateRegression.getAllRegressions().values()) {
-				uniqueEvents.add(regressionResult.getEvent());
-			}
-			
-			uniqueEventCount	= uniqueEvents.size();	
-			maxUniqueErrorsExceeded = uniqueEventCount > maxUniqueErrors;
+			uniqueEventCount = reportVolume.eventCount;
+			maxUniqueErrorsExceeded = reportVolume.eventCount > maxUniqueErrors;
 		} else {
 			uniqueEventCount = 0;
 			maxUniqueErrorsExceeded = false;
 		}
 			
-		boolean unstable = (rateRegression.getCriticalNewEvents().size() > 0)
-				|| (rateRegression.getExceededNewEvents().size() > 0)
-				|| (rateRegression.getCriticalRegressions().size() > 0)
+		boolean unstable = (reportVolume.hasNewCritical)
+				|| (reportVolume.hasNewExceeded)
+				|| (reportVolume.hasCriticalRegression)
 				|| (maxVolumeExceeded)
 				|| (maxUniqueErrorsExceeded);
 		
 		return new RegressionReport(input, rateRegression, newIssues, regressions,
-				topEvents, eventVolume, maxEventVolume, uniqueEventCount, maxUniqueErrors, unstable);
+				reportVolume.topEvents, reportVolume.volume, maxEventVolume, 
+				uniqueEventCount, maxUniqueErrors, unstable);
 	}
 
 	private static List<OOReportEvent> getReportSevereEvents(ApiClient apiClient, 
 		RegressionInput input, RateRegression regression, 
-		Collection<EventResult> events, String type) {
+		Collection<EventResult> events, Collection<EventResult> filter, String type) {
 
 		List<OOReportEvent> result = new ArrayList<OOReportEvent>();
 
 		for (EventResult event : events) {
 
+			if ((filter != null) && (!filter.contains(event))) {
+				continue;
+			}
+			
 			String arcLink = getArcLink(apiClient, event.id, input, regression);
 			OOReportEvent reportEvent = new OOReportEvent(event, type, arcLink);
 
@@ -247,12 +396,17 @@ public class RegressionReportBuilder {
 	}
 	
 	private static List<OOReportEvent> getReportNewEvents(ApiClient apiClient, 
-			RegressionInput input, RateRegression rateRegression) {
+			RegressionInput input, RateRegression rateRegression,
+			Collection<EventResult> filter) {
 		
 		List<OOReportEvent> result = new ArrayList<OOReportEvent>();
 		
 		for (EventResult event : rateRegression.getAllNewEvents().values()) {
 	
+			if ((filter != null) && (!filter.contains(event))) {
+				continue;
+			}
+			
 			if (rateRegression.getCriticalNewEvents().containsKey(event.id)) {
 				continue;
 			}
@@ -273,29 +427,33 @@ public class RegressionReportBuilder {
 
 	
 	private static List<OOReportEvent> getAllNewEvents(ApiClient apiClient,
-			RegressionInput input, RateRegression rateRegression) {
+			RegressionInput input, RateRegression rateRegression, Collection<EventResult> filter) {
 		
 		List<OOReportEvent> result = new ArrayList<OOReportEvent>();
 		
 		result.addAll(getReportSevereEvents(apiClient, input, rateRegression,
-			rateRegression.getCriticalNewEvents().values(), RegressionStringUtil.SEVERE_NEW));
+			rateRegression.getCriticalNewEvents().values(), filter, RegressionStringUtil.SEVERE_NEW));
 		
 		result.addAll(getReportSevereEvents(apiClient, input, rateRegression,
-			rateRegression.getExceededNewEvents().values(), RegressionStringUtil.SEVERE_NEW));
+			rateRegression.getExceededNewEvents().values(), filter, RegressionStringUtil.SEVERE_NEW));
 		
-		result.addAll(getReportNewEvents(apiClient, input, rateRegression));
+		result.addAll(getReportNewEvents(apiClient, input, rateRegression, filter));
 		
 		return result;
 		
 	}
 	
 	private static List<OOReportRegressedEvent> getAllRegressions(ApiClient apiClient, 
-			RegressionInput input, RateRegression rateRegression) {
+			RegressionInput input, RateRegression rateRegression, Collection<EventResult> filter) {
 
 		List<OOReportRegressedEvent> result = new ArrayList<OOReportRegressedEvent>();
 
 		for (RegressionResult regressionResult : rateRegression.getCriticalRegressions().values()) {
 
+			if ((filter != null) && (!filter.contains(regressionResult.getEvent()))) {
+				continue;
+			}
+			
 			String arcLink = getArcLink(apiClient, regressionResult.getEvent().id, input, rateRegression);
 
 			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(regressionResult.getEvent(),

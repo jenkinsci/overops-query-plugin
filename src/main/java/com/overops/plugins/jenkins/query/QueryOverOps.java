@@ -55,7 +55,7 @@ import jenkins.tasks.SimpleBuildStep;
 public class QueryOverOps extends Recorder implements SimpleBuildStep
 {
 	
-	private static final String SEPERATOR = "'";
+	private static final String SEPERATOR = ",";
 	
 	private final int activeTimespan;
 	private final int baselineTimespan;
@@ -80,10 +80,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	private final int maxUniqueErrors;
 	
 	private final String serviceId;
-	
-	private final boolean markUnstable;
+	private final String regexFilter;
+
 	private String applicationName;
 	private String deploymentName;
+	
+	private final boolean markUnstable;
 	
 	@DataBoundConstructor
 	public QueryOverOps(String applicationName, String deploymentName,
@@ -93,7 +95,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 			double regressionDelta, double criticalRegressionDelta,
 			boolean applySeasonality, boolean markUnstable, boolean showResults,
 			int printTopIssues, int maxErrorVolume, int maxUniqueErrors,
-			boolean verbose, String serviceId,
+			String regexFilter, boolean verbose, String serviceId,
 			int serverWait)
 	{
 		
@@ -115,6 +117,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		this.maxErrorVolume = maxErrorVolume;
 		this.maxUniqueErrors = maxUniqueErrors;
+		this.regexFilter = regexFilter;
 		
 		this.printTopIssues = printTopIssues;
 		
@@ -169,6 +172,11 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	public double getcriticalRegressionDelta()
 	{
 		return criticalRegressionDelta;
+	}
+	
+	public String getregexFilter()
+	{
+		return regexFilter;
 	}
 	
 	public String getserviceId()
@@ -343,7 +351,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		input.validate();
 		
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, 
-			input, maxErrorVolume, maxUniqueErrors, printTopIssues, printStream, verbose);
+			input, maxErrorVolume, maxUniqueErrors, printTopIssues, regexFilter, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);

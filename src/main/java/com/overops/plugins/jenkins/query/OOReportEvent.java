@@ -9,6 +9,10 @@ public class OOReportEvent {
 	protected final String arcLink;
 	protected final String type;
 
+	public OOReportEvent(EventResult event, String arcLink) {
+		this(event, null, arcLink);
+	}
+	
 	public OOReportEvent(EventResult event, String type, String arcLink) {
 		this.event = event;
 		this.arcLink = arcLink;
@@ -20,16 +24,18 @@ public class OOReportEvent {
 	}
 
 	public String getEventSummary() {
-		
-		return RegressionStringUtil.getEventSummary(event);
+		String result = RegressionStringUtil.getEventSummary(event);
+		return result;
 	}
 
 	public String getEventRate() {
-		return RegressionStringUtil.getEventRate(event);
+		String result =  RegressionStringUtil.getEventRate(event);
+		return result;
 	}
 
 	public String getIntroducedBy() {
-		return RegressionStringUtil.getIntroducedBy(event);
+		String result =  RegressionStringUtil.getIntroducedBy(event);
+		return result;
 	}
 
 	public String getType() {
@@ -50,6 +56,7 @@ public class OOReportEvent {
 	
 	@Override
 	public String toString() {
-		return getEventSummary() + " " + getEventRate();
+		String result = getEventSummary() + " " + getEventRate();
+		return result;
 	}
 }

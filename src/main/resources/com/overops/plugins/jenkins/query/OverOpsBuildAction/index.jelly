@@ -15,20 +15,23 @@
         <l:main-panel>
             <h1><img src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Reliability Report</h1>
             <h2>${it.summary}</h2>
-            <table style="width:100%">
-            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
-             <j:forEach items="${it.allIssues}" var="i">
-                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
-             </j:forEach>
-            </table>
+            <j:if test="${it.hasReportEvents}">
+	            <h2>New and Regressed Issues</h2>
+	            <table style="width:100%">
+	            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
+	             <j:forEach items="${it.allIssues}" var="i">
+	                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
+	             </j:forEach>
+	            </table>
+             </j:if>
             <j:if test="${it.hasTopIssues}">
-            <h2>${it.topIssuesTitle}</h2>
-            <table style="width:100%">
-            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
-             <j:forEach items="${it.topIssues}" var="k">
-                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
-             </j:forEach>
-            </table>
+	            <h2>${it.topIssuesTitle}</h2>
+	            <table style="width:100%">
+	            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+	             <j:forEach items="${it.topIssues}" var="k">
+	                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+	             </j:forEach>
+	            </table>
             </j:if>
         </l:main-panel>
     </l:layout>
