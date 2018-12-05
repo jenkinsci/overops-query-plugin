@@ -293,17 +293,16 @@ public class RegressionReportBuilder {
 		}
 				
 		result.topEvents = new ArrayList<OOReportEvent>();
-		
-		for (int i = 0; i < Math.min(limit, events.size()); i++) {
-			EventResult event = events.get(i);
-			String arcLink = getArcLink(apiClient, event.id, input, rateRegression);
-			result.topEvents.add(new OOReportEvent(event, arcLink));
-		}
 				
 		for (EventResult event : events) {
 			
 			if (event.stats != null) {
 				result.volume += event.stats.hits;
+				
+				if ((event.stats .hits > 0) && (result.topEvents.size() < limit)) {
+					String arcLink = getArcLink(apiClient, event.id, input, rateRegression);
+					result.topEvents.add(new OOReportEvent(event, arcLink));
+				}
 			}
 			
 			if (rateRegression.getCriticalRegressions().containsKey(event.id)) {

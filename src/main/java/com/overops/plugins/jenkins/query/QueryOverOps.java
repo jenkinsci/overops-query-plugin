@@ -238,15 +238,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	}
 	
 	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name)
-	{
-		
-		if ((value == null) || (value.isEmpty()))
-		{
+	{	
+		if ((value == null) || (value.isEmpty())) {
 			return Collections.emptySet();
 		}
 		
-		if (!isResolved(value))
-		{
+		if (!isResolved(value)) {
 			printStream.println("Value " + value + " is unresolved for " + name + ". Ignoring.");
 			return Collections.emptySet();
 		}
@@ -309,17 +306,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
 		
-		if (allEventsView == null)
-		{
+		if (allEventsView == null) {
 			throw new IllegalStateException(
 					"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
 		}
 		
-		if (serverWait > 0)
-		{
+		if (serverWait > 0) {
 			
-			if ((showResults) && (printStream != null))
-			{
+			if ((showResults) && (printStream != null)) {
 				printStream.println("Waiting " + serverWait + " seconds for code analysis to complete");
 			}
 			
@@ -341,10 +335,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		String expandedAppName = run.getEnvironment(listener).expand(applicationName);
 		String expandedDepName = run.getEnvironment(listener).expand(deploymentName);
 		
-		input.criticalExceptionTypes =
-				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
-		input.criticalExceptionTypes =
-				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
+		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
 		input.applictations = parseArrayString(expandedAppName, printStream, "Application Name");
 		input.deployments = parseArrayString(expandedDepName, printStream, "Deployment Name");
 		
@@ -395,8 +386,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		}
 		
 		@Override
-		public void observe(Operation operation, String url, String response, long time)
-		{
+		public void observe(Operation operation, String url, String response, long time) {
 			StringBuilder output = new StringBuilder();
 			
 			output.append(String.valueOf(operation));
