@@ -108,8 +108,10 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 			
 			Response<String> response = apiClient.testConnection();
 			    
-			boolean testConnection = (response == null) || (response.isBadResponse());
-			boolean testService = ((overOpsSID == null) || (hasAccessToService(apiClient, overOpsSID))); 
+			boolean testConnection = (response != null) && (response.isOK());
+			
+			boolean hasServiceID = (overOpsSID != null) && (overOpsSID.length() > 0);
+			boolean testService = ((!hasServiceID) || (hasAccessToService(apiClient, overOpsSID))); 
 			
 			if (!testConnection) {
 				int code;
