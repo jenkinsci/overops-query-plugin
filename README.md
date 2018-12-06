@@ -19,10 +19,6 @@ The plugin provides a mechanism for applying OverOps severity assignment and reg
   
   **OverOps Service ID**  OverOps Service ID (begins with S)
   
-  **OverOps User**  OverOps username with access to the relevant events.
-  
-  **OverOps Password**  Password for OverOps user.
-  
   **OverOps API Key**  When using an API key User and Password fields are ignored.
   
 Test connection would show you a count of available metrics.  If the count shows 0 measurements, credentials are correct but    database may be wrong.  If credentials are incorrect you will receive an authentication error.
