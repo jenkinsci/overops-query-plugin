@@ -7,7 +7,7 @@
         <f:entry title="OverOps Environment ID" field="overOpsSID">
             <f:textbox />
         </f:entry>
-        <f:entry title="OverOps API Key" field="overOpsAPIKey">
+        <f:entry title="OverOps API Token" field="overOpsAPIKey">
             <f:password />
         </f:entry>
         <f:validateButton

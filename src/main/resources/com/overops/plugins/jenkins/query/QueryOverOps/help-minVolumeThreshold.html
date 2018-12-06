@@ -1,3 +1,9 @@
 <div>
-    The minimal number of times an event of a non-critical type (e.g. uncaught) must take place to be considered severe.
+<pre>
+The minimal number of times an event of a non-critical type (e.g. uncaught) must take place to be considered severe.
+
+<blockquote>- If a New event has a count greater than the set value, it will be evaluated as severe and could break the build if its event rate is above the Event Rate Threshold.</blockquote>
+<blockquote>- If an Existing event has a count greater than the set value, it will be evaluated as severe and could break the build if its event rate is above the Event Rate Threshold and the Critical Regression Threshold.</blockquote>
+<blockquote>- If any event has a count less than the set value, it will not be evaluated as severe and will not break the build.</blockquote>
+</pre>
 </div>

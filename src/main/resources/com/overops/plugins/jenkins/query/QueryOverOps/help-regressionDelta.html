@@ -1,3 +1,5 @@
 <div>
-	The change in percentage between an event's rate in the active time span compared to the baseline to be considered a regression.    
+The change in percentage between an event's rate in the active time span compared to the baseline to be considered a regression. The active time span is the Active Time Window or the Deployment Name (whichever is populated). A rate of 0.1 means the events is allowed to take place <= 10% of the time.
+<blockquote>- If an Existing event has an error rate delta (active window compared to baseline) greater than the set value, it will be marked as a regression, but will not break the build.</blockquote>
+
 </div>

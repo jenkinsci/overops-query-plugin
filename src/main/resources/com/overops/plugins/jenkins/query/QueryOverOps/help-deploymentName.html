@@ -1,3 +1,10 @@
 <div>
-   Deployment Name as specified in OverOps, Can use Jenkins environment variables such as ${BUILD_NUMBER}.
+<pre>
+(Optional) Deployment Name as specified in OverOps or use Jenkins environment variables.
+Example: ${BUILD_NUMBER} or ${JOB_NAME}-${BUILD_NUMBER}
+  
+<blockquote>- If populated, the plugin will filter the data for the specific deployment name in OverOps
+<blockquote><strong>Note:</strong> If using Jenkins environment variables, they must be added to the build’s manifest file for OverOps to use. See this <a href=https://doc.overops.com/docs/naming-your-application-server-deployment>link</a> for details.</blockquote></blockquote>
+<blockquote>- If blank, no deployment filter will be applied in the query.</blockquote>
+</pre>
 </div>
