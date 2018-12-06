@@ -55,7 +55,7 @@ import jenkins.tasks.SimpleBuildStep;
 public class QueryOverOps extends Recorder implements SimpleBuildStep
 {
 	
-	private static final String SEPERATOR = "'";
+	private static final String SEPERATOR = ",";
 	
 	private final int activeTimespan;
 	private final int baselineTimespan;
@@ -80,10 +80,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	private final int maxUniqueErrors;
 	
 	private final String serviceId;
-	
-	private final boolean markUnstable;
+	private final String regexFilter;
+
 	private String applicationName;
 	private String deploymentName;
+	
+	private final boolean markUnstable;
 	
 	@DataBoundConstructor
 	public QueryOverOps(String applicationName, String deploymentName,
@@ -93,7 +95,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 			double regressionDelta, double criticalRegressionDelta,
 			boolean applySeasonality, boolean markUnstable, boolean showResults,
 			int printTopIssues, int maxErrorVolume, int maxUniqueErrors,
-			boolean verbose, String serviceId,
+			String regexFilter, boolean verbose, String serviceId,
 			int serverWait)
 	{
 		
@@ -115,6 +117,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		this.maxErrorVolume = maxErrorVolume;
 		this.maxUniqueErrors = maxUniqueErrors;
+		this.regexFilter = regexFilter;
 		
 		this.printTopIssues = printTopIssues;
 		
@@ -169,6 +172,11 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	public double getcriticalRegressionDelta()
 	{
 		return criticalRegressionDelta;
+	}
+	
+	public String getregexFilter()
+	{
+		return regexFilter;
 	}
 	
 	public String getserviceId()
@@ -230,15 +238,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 	}
 	
 	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name)
-	{
-		
-		if ((value == null) || (value.isEmpty()))
-		{
+	{	
+		if ((value == null) || (value.isEmpty())) {
 			return Collections.emptySet();
 		}
 		
-		if (!isResolved(value))
-		{
+		if (!isResolved(value)) {
 			printStream.println("Value " + value + " is unresolved for " + name + ". Ignoring.");
 			return Collections.emptySet();
 		}
@@ -301,17 +306,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		
 		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
 		
-		if (allEventsView == null)
-		{
+		if (allEventsView == null) {
 			throw new IllegalStateException(
 					"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
 		}
 		
-		if (serverWait > 0)
-		{
+		if (serverWait > 0) {
 			
-			if ((showResults) && (printStream != null))
-			{
+			if ((showResults) && (printStream != null)) {
 				printStream.println("Waiting " + serverWait + " seconds for code analysis to complete");
 			}
 			
@@ -333,17 +335,16 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		String expandedAppName = run.getEnvironment(listener).expand(applicationName);
 		String expandedDepName = run.getEnvironment(listener).expand(deploymentName);
 		
-		input.criticalExceptionTypes =
-				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
-		input.criticalExceptionTypes =
-				parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
+		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream, "Critical Exception Types");
 		input.applictations = parseArrayString(expandedAppName, printStream, "Application Name");
 		input.deployments = parseArrayString(expandedDepName, printStream, "Deployment Name");
 		
 		input.validate();
 		
+		printInputs(printStream, input);
+		
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, 
-			input, maxErrorVolume, maxUniqueErrors, printTopIssues, printStream, verbose);
+			input, maxErrorVolume, maxUniqueErrors, printTopIssues, regexFilter, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);
@@ -351,6 +352,26 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		if ((markUnstable) && (report.getUnstable()))
 		{
 			run.setResult(Result.UNSTABLE);
+		}
+	}
+	
+	private void printInputs(PrintStream printStream, RegressionInput input) {
+	
+		if (printStream != null) {
+			printStream.println(input);
+			
+			printStream.println("Max unique errors  = " + maxUniqueErrors);
+			printStream.println("Max error volume  = " + maxErrorVolume);
+			
+			String regexPrint;
+			
+			if (regexFilter != null) {
+				regexPrint = regexFilter;
+			} else {
+				regexPrint = "";
+			}
+			
+			printStream.println("Regex filter  = " + regexPrint);
 		}
 	}
 
@@ -365,8 +386,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep
 		}
 		
 		@Override
-		public void observe(Operation operation, String url, String response, long time)
-		{
+		public void observe(Operation operation, String url, String response, long time) {
 			StringBuilder output = new StringBuilder();
 			
 			output.append(String.valueOf(operation));

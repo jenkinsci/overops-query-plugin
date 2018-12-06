@@ -39,6 +39,10 @@ public class OverOpsBuildAction implements Action {
 		return regressionReport.getTopIssues().size() > 0;
 	}
 	
+	public boolean getHasReportEvents() {
+		return (regressionReport.getAllIssues().size() > 0);
+	}
+	
 	public String getTopIssuesTitle() {
 		return String.format("Top %d Issues", regressionReport.getTopIssues().size());
 	}
