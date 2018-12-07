@@ -111,7 +111,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 			boolean testConnection = (response == null) || (response.isBadResponse());
 			boolean testService = ((overOpsSID == null) || (hasAccessToService(apiClient, overOpsSID))); 
 			
-			if (!testConnection) {
+			if (testConnection) {
 				int code;
 				
 				if (response != null) {
