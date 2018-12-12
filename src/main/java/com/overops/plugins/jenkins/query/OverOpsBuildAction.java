@@ -122,8 +122,8 @@ public class OverOpsBuildAction implements Action {
 	}
 
 	private static void appendSummaryValue(StringBuilder builder, String name, int value, boolean appendPostfix) {
-
-		if (value > 0) {
+//		Eric commented out 
+//		if (value > 0) {
 			if (builder.length() > 0) {
 				builder.append(", ");
 			}
@@ -140,7 +140,7 @@ public class OverOpsBuildAction implements Action {
 			if (value > 1) {
 				builder.append("s");
 			}
-		}
+//		}
 	}
 
 	public List<OOReportRegressedEvent> getRegressedEvents() {

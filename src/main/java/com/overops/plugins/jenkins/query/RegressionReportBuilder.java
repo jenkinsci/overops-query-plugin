@@ -299,7 +299,9 @@ public class RegressionReportBuilder {
 			if (event.stats != null) {
 				result.volume += event.stats.hits;
 				
-				if ((event.stats .hits > 0) && (result.topEvents.size() < limit)) {
+				//commented out for now until stats collection works every time
+//				if ((event.stats .hits > 0) && (result.topEvents.size() < limit)) {
+				if (result.topEvents.size() < limit) {
 					String arcLink = getArcLink(apiClient, event.id, input, rateRegression);
 					result.topEvents.add(new OOReportEvent(event, arcLink));
 				}
