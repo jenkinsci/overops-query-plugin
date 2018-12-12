@@ -12,3 +12,4 @@ org.joda.time.chrono.ISOChronology
 org.joda.time.chrono.ISOChronology$Stub
 org.joda.time.UTCDateTimeZone
 org.joda.time.Chronology
+org.joda.time.tz.CachedDateTimeZone
