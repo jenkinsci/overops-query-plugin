@@ -4,7 +4,7 @@ This plugin provides a mechanism for applying OverOps severity assignment and re
 
 Run this plugin as a post build step after all other testing is complete to generate a Reliability Report that will determine the stability of the build. From the Reliability Report you can drill down into each specific error using the OverOps [Automated Root Cause](https://doc.overops.com/docs/automated-root-cause-arc) analysis screen to solve the issue.
 
-For more information, on the plugin, [quality gates](https://doc.overops.com/docs/jenkins#section-quality-gates), and for [regression testing examples](https://doc.overops.com/docs/jenkins#section-examples-for-regression-testing), see the [Jenkins Plugin Guide](https://doc.overops.com/docs/jenkins).
+For more information about the plugin, [quality gates](https://doc.overops.com/docs/jenkins#section-quality-gates), and for [regression testing examples](https://doc.overops.com/docs/jenkins#section-examples-for-regression-testing), see the [Jenkins Plugin Guide](https://doc.overops.com/docs/jenkins).
 
 ![OverOps Reliability Report](https://files.readme.io/685502d-image-3.png)
 
