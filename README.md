@@ -47,7 +47,7 @@ Click *Test Connection* to show a count of available metrics. If the count shows
 
 Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll down to **Query OverOps**
 
-![post-build configuration](https://files.readme.io/9e761d6-image_1-1.png)
+![code quality gate options](readme/code-quality-gate-options.png)
 
 ### Application Name
 
