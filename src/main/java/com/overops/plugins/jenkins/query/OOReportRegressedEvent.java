@@ -1,6 +1,7 @@
 package com.overops.plugins.jenkins.query;
 
 import com.takipi.api.client.result.event.EventResult;
+import com.takipi.api.client.util.cicd.OOReportEvent;
 import com.takipi.api.client.util.regression.RegressionStringUtil;
 
 public class OOReportRegressedEvent extends OOReportEvent{
