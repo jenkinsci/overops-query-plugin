@@ -42,7 +42,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 	@Override
 	public String getDisplayName() {
-		return "OverOps Reliabity Report";
+		return "OverOps Quality Report";
 	}
 
 	// Allows for persisting global config settings in JSONObject

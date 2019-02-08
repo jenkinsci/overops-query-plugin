@@ -355,12 +355,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		if (checkRegressionErrors != null) {
 			if (!activeTimespan.equalsIgnoreCase("0")) {
 				if (convertToMinutes(activeTimespan) == 0) {
-					throw new IllegalArgumentException("For Regression Gate, the active timewindow currently set to: " + activeTimespan +  " is not properly formated. See help for format instructions.");
+					throw new IllegalArgumentException("For Increasing Error Gate, the active timewindow currently set to: " + activeTimespan +  " is not properly formated. See help for format instructions.");
 				}
 			}
 			if (!baselineTimespan.equalsIgnoreCase("0")) {
 				if (convertToMinutes(baselineTimespan) == 0) {
-					throw new IllegalArgumentException("For Regression Gate, the baseline timewindow currently set to: " + baselineTimespan + " cannot be zero or is improperly formated. See help for format instructions.");
+					throw new IllegalArgumentException("For Increasing Error Gate, the baseline timewindow currently set to: " + baselineTimespan + " cannot be zero or is improperly formated. See help for format instructions.");
 				}
 			}
 		}
