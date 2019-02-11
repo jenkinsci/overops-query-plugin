@@ -56,6 +56,9 @@ Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll 
 * If populated, the plugin will filter the data for the specific application in OverOps.
 * If blank, no application filter will be applied in query.
 
+**Example:**  
+\${JOB\_NAME }
+
 ### Deployment Name
 
 *(Optional)* [Deployment Name](https://doc.overops.com/docs/naming-your-application-server-deployment) as specified in OverOps or use Jenkins environment variables.
@@ -66,22 +69,22 @@ Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll 
 * If populated, the plugin will filter the data for the specific deployment name in OverOps
 * If blank, no deployment filter will be applied in the query.
 
-### Max Error Volume
+### Max Total Error Volume Gate
 
-Set the max total error volume allowed. If exceeded the build will be marked as unstable. Set to zero to to skip this test.
+Set the max total error volume allowed. If exceeded the build will be marked as unstable. 
 
-### Max Unique Error Volume
+### Max Unique Error Volume Gate
 
-Set the max unique error volume allowed. If exceeded the build will be marked as unstable. Set to zero to to skip this test.
+Set the max unique error volume allowed. If exceeded the build will be marked as unstable. 
 
-### Critical Exception Types
+### Critical Exception Type Gate
 
-A comma delimited list of exception types that are deemed as severe regardless of their volume. If new events of any exceptions listed have a count greater than zero, the build will be marked as unstable. Blank to skip this test.
+A comma delimited list of exception types that are deemed as severe regardless of their volume. If any events of any exceptions listed have a count greater than zero, the build will be marked as unstable.
 
 **Example:**  
 NullPointerException,IndexOutOfBoundsException
 
-### Regression testing
+### Increasing Errors Gate
 
 **Combines the following parameters:**
 
@@ -91,24 +94,17 @@ NullPointerException,IndexOutOfBoundsException
 * Critical Regression Threshold
 * Apply Seasonality
 
-**Skip this test with the following conditions:**
+#### Active Time Window (d - day, h - hour, m - minute)
 
-* Event Volume Threshold = 0
-* Event Rate Threshold = 0
-* Regression Delta = 0
-* Critical Regression Threshold = 0
+The time window (in minutes) inspected to search for new issues and regressions. To compare the current build with a baseline time window, leave the value at zero.
 
-#### Active Time Window (minutes)
+* **Example:** 1d would be one day active time window.
 
-The time window (in minutes) inspected to search for new issues and regressions. Set to zero to use the Deployment Name (which would be the current build).
+#### Baseline Time Window  (d - day, h - hour, m - minute)
 
-* **Example:** 1440 would be one day active time window.
+The time window against which events in the active window are compared to test for regressions. For using the Increaing Error Gate, a baseline time window is required
 
-#### Baseline Time Window (minutes)
-
-The time window (in minutes) against which events in the active window are compared to test for regressions. Must be set to a non zero value
-
-* **Example:** 20160 would be a two week baseline time window.
+* **Example:** 14d would be a two week baseline time window.
 
 #### Event Volume Threshold
 
@@ -160,16 +156,8 @@ If checked the build will be marked unstable if any of the above gates are met.
 
 ### Show Top Issues
 
-Prints the top X events (as provided by this parameter) with the highest volume of errors detected within the active time window, This is useful when used in conjunction with Max Error Volume to identify the errors which caused a build to fail.
+Prints the top X events (as provided by this parameter) with the highest volume of errors detected in the current build. This is used in conjunction with Max Error Volume and Unique Error Volume to identify the errors which caused a build to fail.
 
-### Show Query Results
+### Debug Mode
 
-If checked, all queries will be displayed in the OverOps reliability report. For debugging purposes only.
-
-### Verbose Mode
-
-If checked, all query results will be displayed in the OverOps reliability report. For advanced debugging purposes only.
-
-### Analysis Wait Time (seconds)
-
-Delay time before querying OverOps (in seconds). This is meant to ensure analytics data has been transmitted to and analyzed by OverOps before the plugin performs a query.
+If checked, all queries and results will be displayed in the OverOps reliability report. For debugging purposes only.
