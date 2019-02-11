@@ -267,6 +267,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 		PrintStream printStream;
 
+		//next rev need to be able to have generic logging of when we start, settings, etc.
 		if (debug) {
 			printStream = listener.getLogger();
 		} else {
