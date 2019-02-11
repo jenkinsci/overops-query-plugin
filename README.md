@@ -69,11 +69,40 @@ Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll 
 * If populated, the plugin will filter the data for the specific deployment name in OverOps
 * If blank, no deployment filter will be applied in the query.
 
-### Max Total Error Volume Gate
+
+### Environment ID
+
+The OverOps environment identifier (e.g S4567) to inspect data for this build. If no value is provided here, the value provided in the global Jenkins plug settings will be used.
+
+### Regex Filter
+
+A way to filter out specific event types from affecting the outcome of the OverOps Reliability report.
+
+* Sample list of event types, Uncaught Exception, Caught Exception,|Swallowed Exception, Logged Error, Logged Warning, Timer
+* This filter enables the removal of one or more of these event types from the final results.
+* Example filter expression with pipe separated list- ```"type":\"s*(Logged Error|Logged Warning|Timer)```
+
+### Mark Build Unstable
+
+If checked the build will be marked unstable if any of the above gates are met.
+
+### Show Top Issues
+
+Prints the top X events (as provided by this parameter) with the highest volume of errors detected in the current build. This is used in conjunction with Max Error Volume and Unique Error Volume to identify the errors which caused a build to fail.
+
+### New Error Gate
+
+Detect all new errors in the build. If found, the build will be marked as unstable.
+
+### Resurfaced Error Gate
+
+Detect all resurfaced errors in the build. If found, the build will be marked as unstable.
+
+### Total Error Volume Gate
 
 Set the max total error volume allowed. If exceeded the build will be marked as unstable. 
 
-### Max Unique Error Volume Gate
+### Unique Error Volume Gate
 
 Set the max unique error volume allowed. If exceeded the build will be marked as unstable. 
 
@@ -138,25 +167,6 @@ The change in percentage between an event's rate in the active time span compare
 
 If peaks have been seen in baseline window, then this would be considered normal and not a regression. Should the plugin identify an equal or matching peak in the baseline time window, or two peaks of greater than 50% of the volume seen in the active window, the event will not be marked as a regression.
 
-### Regex Filter
-
-A way to filter out specific event types from affecting the outcome of the OverOps Reliability report.
-
-* Sample list of event types, Uncaught Exception, Caught Exception,|Swallowed Exception, Logged Error, Logged Warning, Timer
-* This filter enables the removal of one or more of these event types from the final results.
-* Example filter expression with pipe separated list- ```"type":\"s*(Logged Error|Logged Warning|Timer)```
-
-### Environment ID
-
-The OverOps environment identifier (e.g S4567) to inspect data for this build. If no value is provided here, the value provided in the global Jenkins plug settings will be used.
-
-### Mark Build Unstable
-
-If checked the build will be marked unstable if any of the above gates are met.
-
-### Show Top Issues
-
-Prints the top X events (as provided by this parameter) with the highest volume of errors detected in the current build. This is used in conjunction with Max Error Volume and Unique Error Volume to identify the errors which caused a build to fail.
 
 ### Debug Mode
 
