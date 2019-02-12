@@ -6,7 +6,7 @@ Run this plugin as a post build step after all other testing is complete to gene
 
 For more information about the plugin, [quality gates](https://doc.overops.com/docs/jenkins#section-quality-gates), and for [regression testing examples](https://doc.overops.com/docs/jenkins#section-examples-for-regression-testing), see the [Jenkins Plugin Guide](https://doc.overops.com/docs/jenkins).
 
-![OverOps Reliability Report](https://files.readme.io/685502d-image-3.png)
+![OverOps Reliability Report](https://files.readme.io/65d290-Pasted_image_at_2019-02-11__6_21_PM.png)
 
 ## Installation
 
