@@ -384,13 +384,13 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private int convertToMinutes(String timeWindow) {
 		
 		if (timeWindow.toLowerCase().contains("d")) {
-			Integer days = Integer.valueOf(timeWindow.substring(0, timeWindow.indexOf("d")));
+			Integer days = Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("d")));
 			return days * 24 * 60;
 		} else if (timeWindow.toLowerCase().contains("h")) {
-			Integer hours = Integer.valueOf(timeWindow.substring(0, timeWindow.indexOf("h")));
+			Integer hours = Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("h")));
 			return hours * 60;
 		} else if (timeWindow.toLowerCase().contains("m")) {
-			return Integer.valueOf(timeWindow.substring(0, timeWindow.indexOf("m")));
+			return Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("m")));
 		} 
 		
 		return 0;

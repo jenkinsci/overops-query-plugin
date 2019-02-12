@@ -216,12 +216,7 @@ public class ReportBuilder {
 	}
 	
 	private static class ReportVolume {
-		protected long volume;
-		protected int eventCount;
 		protected List<OOReportEvent> topEvents;
-		protected boolean hasNewExceeded = false;
-		protected boolean hasNewCritical = false;
-		protected boolean hasCriticalRegression = false;
 		protected Collection<EventResult> filter;
 		
 	}
@@ -335,50 +330,17 @@ public class ReportBuilder {
 				
 		result.topEvents = new ArrayList<OOReportEvent>();
 				
-		for (EventResult event : events) {
-			
+		for (EventResult event : events) {	
 			if (event.stats != null) {
-				result.volume += event.stats.hits;
-				
 				if (result.topEvents.size() < limit) {
 					String arcLink = ProcessQualityGates.getArcLink(apiClient, event.id, input, rateRegression.getActiveWndowStart());
 					result.topEvents.add(new OOReportEvent(event, arcLink));
 				}
-			}
-			
-			//add for new events here
-			if (rateRegression.getCriticalRegressions().containsKey(event.id)) {
-				result.hasCriticalRegression = true;
-			}
-			
-			if (rateRegression.getCriticalNewEvents().containsKey(event.id)) {
-				result.hasNewCritical = true;
-			}
-			
-			if (rateRegression.getSortedExceededNewEvents().contains(event)) {
-				result.hasNewExceeded = true;
-			}
+			}		
 		}
-		
-		result.eventCount = getUniqueErrorCount(events); 
-		
+				
 		return result;
 	}
-		
-	private static int getUniqueErrorCount(Collection<EventResult> events) {
-		
-		Set<UniqueEventKey> grouped = new HashSet<UniqueEventKey>(events.size());
-		
-		for (EventResult event : events) {
-			UniqueEventKey uniqueEventKey = new UniqueEventKey(event);
-			grouped.add(uniqueEventKey);
-		}
-		
-		int result = grouped.size();
-		
-		return result;		
-	}
-	
 	
 	/*
 	 * Entry point into report engine
@@ -404,7 +366,7 @@ public class ReportBuilder {
 		}
 		 
 		//run the regression gate
-		ReportVolume reportVolume = new ReportVolume();
+		ReportVolume reportVolume;
 		RateRegression rateRegression = null;
 		List<OOReportRegressedEvent> regressions = null;
 		boolean hasRegressions = false;
