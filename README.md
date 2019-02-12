@@ -1,4 +1,4 @@
-# OverOps Query Jenkins Plugin
+# OverOps Reliability Report - Jenkins Plugin
 
 This plugin provides a mechanism for applying OverOps severity assignment and regression analysis to new builds to allow application owners, DevOps engineers, and SREs to determine the quality of their code before promoting it into production.
 

@@ -2,8 +2,8 @@ package com.overops.plugins.jenkins.query;
 
 import java.util.List;
 
-import com.overops.plugins.jenkins.query.RegressionReportBuilder.RegressionReport;
-import com.takipi.api.client.util.regression.RegressionStringUtil;
+import com.overops.plugins.jenkins.query.ReportBuilder.QualityReport;
+import com.takipi.api.client.util.cicd.OOReportEvent;
 
 import hudson.model.Action;
 import hudson.model.Run;
@@ -13,10 +13,10 @@ public class OverOpsBuildAction implements Action {
 	private static final String ISSUE = "Issue";
 	
 	private final Run<?, ?> build;
-	private final RegressionReport regressionReport;
+	private final QualityReport qualityReport;
 
-	OverOpsBuildAction(RegressionReport regressionReport, Run<?, ?> build) {
-		this.regressionReport = regressionReport;
+	OverOpsBuildAction(QualityReport qualityReport, Run<?, ?> build) {
+		this.qualityReport = qualityReport;
 		this.build = build;
 	}
 
@@ -27,140 +27,227 @@ public class OverOpsBuildAction implements Action {
 
 	@Override
 	public String getDisplayName() {
-		return "OverOps Reliability Report";
+		return "OverOps Quality Report";
 	}
 
 	@Override
 	public String getUrlName() {
 		return "OverOpsReport";
 	}
-
-	public boolean getHasTopIssues() {
-		return regressionReport.getTopIssues().size() > 0;
+	
+	public boolean getUnstable() {
+		return qualityReport.getUnstable();
 	}
 	
-	public boolean getHasReportEvents() {
-		return (regressionReport.getAllIssues().size() > 0);
-	}
-	
-	public String getTopIssuesTitle() {
-		return String.format("Top %d Issues", regressionReport.getTopIssues().size());
+	public boolean getMarkedUnstable() {
+		return qualityReport.isMarkedUnstable();
 	}
 	
 	public String getSummary() {
-
-		StringBuilder result = new StringBuilder();
-
-		int newIssues = 0;
-		int severeNewIssues = 0;
-		int regressions = 0;
-		int severeRegressions = 0;
-
-		for (OOReportEvent event : regressionReport.getAllIssues()) {
-
-			String type = event.getType();
-
-			if (type.equals(RegressionStringUtil.SEVERE_NEW)) {
-				severeNewIssues++;
-				continue;
-			}
-
-			if (type.equals(RegressionStringUtil.NEW_ISSUE)) {
-				newIssues++;
-				continue;
-			}
-
-			if (type.equals(RegressionStringUtil.SEVERE_REGRESSION)) {
-				severeRegressions++;
-				continue;
-			}
-
-			if (type.equals(RegressionStringUtil.REGRESSION)) {
-				regressions++;
-				continue;
-			}
-		}
-
-		appendSummaryValue(result, RegressionStringUtil.SEVERE_NEW, severeNewIssues, true);
-		appendSummaryValue(result, RegressionStringUtil.NEW_ISSUE, newIssues, true);
-		appendSummaryValue(result, RegressionStringUtil.SEVERE_REGRESSION, severeRegressions, false);
-		appendSummaryValue(result, RegressionStringUtil.REGRESSION, regressions, false);
-
-		if (result.length() == 0) {
-			result.append("No new errors or regressions found");
-		}
+		if (getUnstable() && getMarkedUnstable()) {
+			//the build is unstable when marking the build as unstable
+			return "OverOps has marked build "+ getDeploymentName() + "  as unstable because the below quality gate(s) were not met.";
+		} else if (!getMarkedUnstable() && getUnstable()) {
+			//unstable build stable when NOT marking the build as unstable
+			return "OverOps has detected issues with build "+ getDeploymentName() + "  but did not mark the build as unstable.";
+		} else {
+			//stable build when marking the build as unstable
+			return "Congratulations, build " + getDeploymentName() + " has passed all quality gates!";
+		} 
+	}
 	
-		String regName = RegressionStringUtil.getRegressionName(regressionReport.getInput(), 
-			regressionReport.getRegression().getActiveWndowStart());
-		
-		if (regName != null) {
-			result.append(" in ");
-			result.append(regName);
+	private String getDeploymentName() {
+		String value = qualityReport.getInput().deployments.toString();	
+		value = value.replace("[", "");
+		value = value.replace("]", "");
+		return value;
+	}
+	
+	public boolean getPassedNewErrorGate() {
+		if (getCheckNewEvents() && !getNewErrorsExist()) {
+			return true;
 		}
 		
-		boolean eventVolumeExeeded = (regressionReport.getMaxEventVolume() > 0) && 
-				(regressionReport.getEventVolume() > regressionReport.getMaxEventVolume());
-		
-		if (eventVolumeExeeded) {
-			result.append(". Error volume " );
-			result.append(regressionReport.getEventVolume());
-			result.append(" exceeded max ");
-			result.append(regressionReport.getMaxEventVolume());
+		return false;
+	}
+	
+	public boolean getCheckNewEvents() {
+		return qualityReport.isCheckNewGate();
+	}
+	
+	public String getNewErrorSummary() {
+		if (getNewEvents() != null && getNewEvents().size() > 0) {
+			return "New Error Gate: Failed, OverOps detected " + qualityReport.getNewIssues().size() + " new error(s) in your build.";
+		} else if (qualityReport.isCheckNewGate()) {
+			return "New Error Gate: Passed, OverOps did not detect any new errors in your build.";
 		}
 		
-		boolean uniqueErrorCountExceeded = (regressionReport.getMaxUniqueEvents() > 0) && 
-				(regressionReport.getUniqueEventsCount() > regressionReport.getMaxUniqueEvents());
-		
-		if (uniqueErrorCountExceeded) {
-				result.append(". Unique error count " );
-				result.append(regressionReport.getUniqueEventsCount());
-				result.append(" exceeded max ");
-				result.append(regressionReport.getMaxUniqueEvents());
-			}
-
-		return result.toString();
+		return null;
 	}
-
-	private static void appendSummaryValue(StringBuilder builder, String name, int value, boolean appendPostfix) {
-//		Eric commented out 
-//		if (value > 0) {
-			if (builder.length() > 0) {
-				builder.append(", ");
-			}
-
-			builder.append(value);
-			builder.append(" ");
-			builder.append(name);
-			
-			if (appendPostfix) {
-				builder.append(" ");
-				builder.append(ISSUE);			
-			}
-
-			if (value > 1) {
-				builder.append("s");
-			}
-//		}
+	
+	public boolean getNewErrorsExist() {
+		if (getNewEvents() != null && getNewEvents().size() > 0) {
+			return true;
+		}
+		return false;
 	}
-
-	public List<OOReportRegressedEvent> getRegressedEvents() {
-		return regressionReport.getRegressions();
-	}
-
+	
 	public List<OOReportEvent> getNewEvents() {
-		return regressionReport.getNewIssues();
-	}
-
-	public List<OOReportEvent> getAllIssues() {
-		return regressionReport.getAllIssues();
+		return qualityReport.getNewIssues();
 	}
 	
-	public List<OOReportEvent> getTopIssues() {
-		return regressionReport.getTopIssues();
+	public boolean getPassedResurfacedErrorGate() {
+		if (getCheckResurfacedEvents() && !getResurfacedErrorsExist()) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean getResurfacedErrorsExist() {
+		if (getResurfacedEvents() != null && getResurfacedEvents().size() > 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean getCheckResurfacedEvents() {
+		return qualityReport.isCheckResurfacedGate();
+	}
+	
+	public String getResurfacedErrorSummary() {
+		if (getResurfacedEvents() != null && getResurfacedEvents().size() > 0) {
+			return "Resurfaced Error Gate: Failed, OverOps detected " + qualityReport.getResurfacedErrors().size() + " resurfaced errors in your build.";
+		} else if (qualityReport.isCheckResurfacedGate()) {
+			return "Resurfaced Error Gate: Passed, OverOps did not detect any resurfaced errors in your build.";
+		}
+		
+		return null;
+	}
+	
+	public List<OOReportEvent> getResurfacedEvents() {
+		return qualityReport.getResurfacedErrors();
+	}
+	
+	public boolean getCheckCriticalErrors() {
+		return qualityReport.isCheckCriticalGate();
+	}
+	
+	public boolean getPassedCriticalErrorGate() {
+		if (getCheckCriticalErrors() && !getCriticalErrorsExist()) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public boolean getCriticalErrorsExist() {
+		if (getCriticalEvents() != null && getCriticalEvents().size() > 0) {
+			return true;
+		}
+		return false;
+	}
+	
+	public String getCriticalErrorSummary() {
+		if (getCriticalEvents() != null && getCriticalEvents().size() > 0) {
+			return "Critical Error Gate: Failed, OverOps detected " + qualityReport.getCriticalErrors().size() + " critical errors in your build.";
+		} else if (qualityReport.isCheckCriticalGate()) {
+			return "Critical Error Gate: Passed, OverOps did not detect any critical errors in your build.";
+		}
+		
+		return null;
+	}
+	
+	public List<OOReportEvent> getCriticalEvents() {
+		return qualityReport.getCriticalErrors();
+	}
+	
+	//this will serve as a check for either unique or total error gates
+	public boolean getCountGates() {
+		if (getCheckUniqueErrors() || getCheckTotalErrors()) {
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean getCheckTotalErrors() {
+		return qualityReport.isCheckVolumeGate();
+	}
+	
+	public boolean getPassedTotalErrorGate() {
+		if (getCheckTotalErrors() && (qualityReport.getEventVolume() > 0 && qualityReport.getEventVolume() < qualityReport.getMaxEventVolume())) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public String getTotalErrorSummary() {
+		if (qualityReport.getEventVolume() > 0 && qualityReport.getEventVolume() >= qualityReport.getMaxEventVolume()) {
+			return "Total Error Volume Gate: Failed, OverOps detected " + qualityReport.getEventVolume() + " total errors which is >= the max allowable of " + qualityReport.getMaxEventVolume();
+		} else if (qualityReport.getEventVolume() > 0 && qualityReport.getEventVolume() < qualityReport.getMaxEventVolume()) {
+			return "Total Error Volume Gate: Passed, OverOps detected " + qualityReport.getEventVolume() + " total errors which is < than max allowable of " + qualityReport.getMaxEventVolume();
+		}
+		
+		return null;
+	}
+	
+	public boolean getCheckUniqueErrors() {
+		return qualityReport.isCheckUniqueGate();
+	}
+	
+	public boolean getHasTopErrors() {
+		if (!getPassedTotalErrorGate() || !getPassedUniqueErrorGate()) {
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean getPassedUniqueErrorGate() {
+		if (getCheckUniqueErrors() && (qualityReport.getUniqueEventsCount() > 0 && qualityReport.getUniqueEventsCount() < qualityReport.getMaxUniqueVolume())) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	public String getUniqueErrorSummary() {
+		if (qualityReport.getUniqueEventsCount() > 0 && qualityReport.getUniqueEventsCount() >= qualityReport.getMaxUniqueVolume()) {
+			return "Unique Error Volume Gate: Failed, OverOps detected " + qualityReport.getUniqueEventsCount() + " unique errors which is >= the max allowable of " + qualityReport.getMaxUniqueVolume();
+		} else if (qualityReport.getUniqueEventsCount() > 0 && qualityReport.getUniqueEventsCount() < qualityReport.getMaxUniqueVolume()) {
+			return "Unique Error Volume Gate: Passed, OverOps detected " + qualityReport.getUniqueEventsCount() + " unique errors which is < than max allowable of " + qualityReport.getMaxUniqueVolume();
+		}
+		
+		return null;
+	}
+	
+	public List<OOReportEvent> getTopEvents() {
+		return qualityReport.getTopErrors();
+	}
+	
+	public String getRegressionSumarry() {
+		if (!getPassedRegressedEvents()) {
+			return "Increasing Quality Gate: Failed, OverOps detected incressing errors in the current build against the baseline of " + qualityReport.getInput().baselineTime;
+		} else if (getPassedRegressedEvents()) {
+			return "Increasing Quality Gate: Passed, OverOps did not detect any increasing errors in the current build against the baseline of " + qualityReport.getInput().baselineTime;
+		}
+		
+		return null;
+	}
+	
+	public boolean getCheckRegressedErrors() {
+		return qualityReport.isCheckRegressionGate();
+	}
+	
+	public boolean getPassedRegressedEvents() {
+		if (getCheckRegressedErrors() && qualityReport.getRegressions() != null && qualityReport.getRegressions().size() > 0) {
+			return false;
+		}
+		return true;
 	}
 
-	public int getBuildNumber() {
-		return this.build.number;
+	public List<OOReportEvent> getRegressedEvents() {
+		return qualityReport.getAllIssues();
 	}
 
 	public Run<?, ?> getBuild() {

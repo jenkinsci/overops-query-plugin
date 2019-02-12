@@ -7,9 +7,15 @@ com.takipi.api.client.data.event.Stats
 com.takipi.api.client.util.regression.RegressionInput
 com.takipi.api.client.util.regression.RateRegression
 com.takipi.api.client.util.regression.RegressionResult
+com.takipi.api.client.util.cicd.OOReportEvent
+com.takipi.api.client.util.cicd.ProcessQualityGates
+com.takipi.api.client.util.cicd.QualityGateReport
 org.joda.time.DateTime
 org.joda.time.chrono.ISOChronology
 org.joda.time.chrono.ISOChronology$Stub
 org.joda.time.UTCDateTimeZone
 org.joda.time.Chronology
 org.joda.time.tz.CachedDateTimeZone
+org.joda.time.Minutes
+net.sf.json.JSONObject
+org.apache.commons.collections.map.ListOrderedMap

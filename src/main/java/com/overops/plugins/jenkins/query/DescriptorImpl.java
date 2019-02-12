@@ -42,7 +42,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 	@Override
 	public String getDisplayName() {
-		return "Query OverOps";
+		return "OverOps Quality Report";
 	}
 
 	// Allows for persisting global config settings in JSONObject
@@ -90,6 +90,15 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 	}
 	
+	/**
+	 * Tests to make sure the global settings for the Jenkins plugin pass checks
+	 * 1st check is the URL for the APIs
+	 * 2nd check is the serviceID to make sure the API token provided has access
+	 * @param overOpsURL
+	 * @param overOpsSID
+	 * @param overOpsAPIKey
+	 * @return
+	 */
 	@POST
 	public FormValidation doTestConnection(@QueryParameter("overOpsURL") final String overOpsURL,
 			@QueryParameter("overOpsSID") final String overOpsSID,

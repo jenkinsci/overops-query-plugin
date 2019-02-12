@@ -1,8 +1,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-        <f:section title="Query OverOps Plugin" name="QueryOverOps" >
+        <f:section title="OverOps Quality Report" name="QueryOverOps" >
         <f:entry title="OverOps URL" field="overOpsURL">
-            <f:textarea />
+            <f:textbox />
         </f:entry>
         <f:entry title="OverOps Environment ID" field="overOpsSID">
             <f:textbox />

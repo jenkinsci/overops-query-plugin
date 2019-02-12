@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <l:layout>
         <st:include it="${it.build}" page="sidepanel.jelly"/>
         <style>
@@ -11,28 +11,155 @@
 			    padding: 5px;
 			    text-align: left;
 			}
+			failed {
+			    color: #ff0000;
+			}
+			passed {
+				color: #008000;
+			}
+			orange {
+				color: #FFA500;
+			}
 		</style>
         <l:main-panel>
-            <h1><img src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Reliability Report</h1>
-            <h2>${it.summary}</h2>
-            <j:if test="${it.hasReportEvents}">
-	            <h2>New and Regressed Issues</h2>
-	            <table style="width:100%">
-	            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
-	             <j:forEach items="${it.allIssues}" var="i">
-	                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
-	             </j:forEach>
+            <h1><img src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Quality Report</h1>
+            <j:if test="${it.markedUnstable}">
+	            <j:if test="${it.unstable}">
+		            <failed>
+		            		<h2>${it.summary}</h2>
+		            </failed>
+	            </j:if>
+	            <j:if test="${!it.unstable}">
+		            <passed>
+		            		<h2>${it.summary}</h2>
+		            </passed>
+	            </j:if>
+	        </j:if>
+	        <j:if test="${!it.markedUnstable}">
+	            <j:if test="${it.unstable}">
+		            <orange>
+		            		<h2>${it.summary}</h2>
+		            </orange>
+	            </j:if>
+	            <j:if test="${!it.unstable}">
+		            <passed>
+		            		<h2>${it.summary}</h2>
+		            </passed>
+	            </j:if>
+	        </j:if>
+            <j:if test="${it.checkNewEvents}">
+            		<table style="width:100%">
+	             <j:if test="${it.passedNewErrorGate}">
+		           	<tr style="font-weight:bold"><td style="color:#008000">${it.newErrorSummary}</td></tr>
+		           	<table style="width:100%">
+		            <tr><td>Nothing to report</td></tr>
+		            </table>
+	            </j:if>
+	             <j:if test="${!it.passedNewErrorGate}"> 
+		            	<tr style="font-weight:bold"><td style="color:#ff0000">${it.newErrorSummary}</td></tr>
+		           	<table style="width:100%">
+		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		             <j:forEach items="${it.newEvents}" var="k">
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		             </j:forEach>
+		            </table>
+	            </j:if>
 	            </table>
-             </j:if>
-            <j:if test="${it.hasTopIssues}">
-	            <h2>${it.topIssuesTitle}</h2>
-	            <table style="width:100%">
-	            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
-	             <j:forEach items="${it.topIssues}" var="k">
-	                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
-	             </j:forEach>
-	            </table>
+	            <h2> </h2>
             </j:if>
+            <j:if test="${it.checkResurfacedEvents}">
+              <table style="width:100%">
+	            <j:if test="${it.passedResurfacedErrorGate}">
+		           <tr style="font-weight:bold"><td style="color:#008000">${it.resurfacedErrorSummary}</td></tr>
+		           <table style="width:100%">
+		            <tr><td>Nothing to report</td></tr>
+		            </table>
+	            </j:if>
+	            <j:if test="${!it.passedResurfacedErrorGate}">
+	            		<tr style="font-weight:bold"><td style="color:#ff0000">${it.resurfacedErrorSummary}</td></tr>
+		            <table style="width:100%">
+		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		             <j:forEach items="${it.resurfacedEvents}" var="k">
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		             </j:forEach>
+		            </table>
+	            </j:if>
+	            </table>	
+	            <h2> </h2>
+           	</j:if>
+           	<j:if test="${it.checkTotalErrors || it.checkUniqueErrors}">
+           		<table style="width:100%">
+	           	<j:if test="${it.checkTotalErrors}">
+		             <j:if test="${it.passedTotalErrorGate}">
+			            <tr style="font-weight:bold"><td style="color:#008000">${it.totalErrorSummary}</td></tr>
+		            </j:if>
+		             <j:if test="${!it.passedTotalErrorGate}">
+		             	<tr style="font-weight:bold"><td style="color:#ff0000">${it.totalErrorSummary}</td></tr>
+		            </j:if>
+		        </j:if>
+		        <j:if test="${it.checkUniqueErrors}">
+		             <j:if test="${it.passedUniqueErrorGate}">
+		             	<tr style="font-weight:bold"><td style="color:#008000">${it.uniqueErrorSummary}</td></tr>
+		            </j:if>
+		             <j:if test="${!it.passedUniqueErrorGate}">
+		             	<tr style="font-weight:bold"><td style="color:#ff0000">${it.uniqueErrorSummary}</td></tr>
+		            </j:if>
+		        </j:if>
+		        <j:if test="${it.hasTopErrors}">
+			            <table style="width:100%">
+			            <tr style="font-weight:bold"><td>Top Events Affecting Unique/Total Error Gates</td> <td>Introduced by</td><td>Volume</td></tr>
+			             <j:forEach items="${it.topEvents}" var="k">
+			                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+			             </j:forEach>
+			            </table>					
+		        </j:if>	 
+		        <j:if test="${!it.hasTopErrors}">
+		        		<table style="width:100%">
+		            <tr><td>Nothing to report</td></tr>
+		            </table>
+		        </j:if>	
+		        </table>
+		        <h2> </h2>
+		    </j:if>  
+	        <j:if test="${it.checkCriticalErrors}">
+	          <table style="width:100%">
+	        		<j:if test="${it.passedCriticalErrorGate}">
+	        			<tr style="font-weight:bold"><td style="color:#008000">${it.criticalErrorSummary}</td></tr>
+	        			<table style="width:100%">
+		            <tr><td>Nothing to report</td></tr>
+		            </table>
+	            </j:if>
+	            <j:if test="${!it.passedCriticalErrorGate}">
+	            		<tr style="font-weight:bold"><td style="color:#ff0000">${it.criticalErrorSummary}</td></tr>
+		            <table style="width:100%">
+		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		             <j:forEach items="${it.criticalEvents}" var="k">
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		             </j:forEach>
+		            </table>
+	            </j:if>
+	            </table>
+	            <h2> </h2>
+	        </j:if>
+            <j:if test="${it.checkRegressedErrors}">
+            	   <table style="width:100%">
+            		<j:if test="${it.passedRegressedEvents}">
+            		    <tr style="font-weight:bold"><td style="color:#008000">${it.regressionSumarry}</td></tr>
+            		    <table style="width:100%">
+		            <tr><td>Nothing to report</td></tr>
+		            </table>
+	            </j:if>
+				<j:if test="${!it.passedRegressedEvents}">
+				    <tr style="font-weight:bold"><td style="color:#ff0000">${it.regressionSumarry}</td></tr>
+		            <table style="width:100%">
+		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
+		             <j:forEach items="${it.regressedEvents}" var="i">
+		                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
+		             </j:forEach>
+		            </table>
+		        </j:if>
+		        </table>
+             </j:if>
         </l:main-panel>
     </l:layout>
 </j:jelly>
