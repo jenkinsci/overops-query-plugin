@@ -1,26 +1,26 @@
 /*
- * The MIT License
- *
- * Copyright (c) 2018, OverOps, Inc., Joe Offenberg
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
+* The MIT License
+*
+* Copyright (c) 2018, OverOps, Inc., Joe Offenberg
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+*
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 
 package com.overops.plugins.jenkins.query;
 
@@ -131,7 +131,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 
 	// getters() needed for config.jelly
-	 
+
 	public String getapplicationName() {
 		return applicationName;
 	}
@@ -465,9 +465,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		if (checkCriticalErrors != null && !checkCriticalErrors.isNullObject()) {
 			String value = checkCriticalErrors.getString ("criticalExceptionTypes");
 			this.criticalExceptionTypes = value;
-        } else {
-            this.criticalExceptionTypes = null;
-        }
+				} else {
+						this.criticalExceptionTypes = null;
+				}
 	}
 	
 	//parse the JSON object to get the maxErrorVolume value
@@ -477,9 +477,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			if (value != null && !value.isEmpty()) {
 				this.maxErrorVolume = Integer.valueOf(value);
 			}
-        } else {
-            this.maxErrorVolume = 0;
-        }
+				} else {
+						this.maxErrorVolume = 0;
+				}
 	}
 	
 	//parse the JSON object to get the maxUniqueVolume value
@@ -489,27 +489,27 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			if (value != null && !value.isEmpty()) {
 				this.maxUniqueErrors = Integer.valueOf(value);
 			}
-        } else {
-            this.maxUniqueErrors = 0;
-        }
+				} else {
+						this.maxUniqueErrors = 0;
+				}
 	}
 	
 	//parse the JSON object to get the checkNewErrors value
 	private void parseNewErrors() {
 		if (checkNewErrors != null && !checkNewErrors.isNullObject()) {
-            this.newEvents = true;
-        } else {
-            this.newEvents = false;
-        }
+						this.newEvents = true;
+				} else {
+						this.newEvents = false;
+				}
 	}
 	
 	//parse the JSON object to get the checkResurfacedErrors value
 	private void parseResurfacedErrors() {
 		if (checkResurfacedErrors != null && !checkResurfacedErrors.isNullObject()) {
-            this.resurfacedErrors = true;
-        } else {
-            this.resurfacedErrors = false;
-        }
+						this.resurfacedErrors = true;
+				} else {
+						this.resurfacedErrors = false;
+				}
 	}
 	
 	//parse the JSON object to get the checkRegressionErrors values
@@ -540,14 +540,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			if (value != null && !value.isEmpty()) {
 				this.criticalRegressionDelta = Double.valueOf(value);
 			}
-        } else {
-	        	this.activeTimespan = "0";
-	    		this.baselineTimespan = "0";
-	    		this.minErrorRateThreshold = 0d;
-	    		this.minVolumeThreshold = 0;
-	    		this.applySeasonality = false;
-	    		this.regressionDelta = 0d;
-	    		this.criticalRegressionDelta = 0d;
-        }
+				} else {
+						this.activeTimespan = "0";
+					this.baselineTimespan = "0";
+					this.minErrorRateThreshold = 0d;
+					this.minVolumeThreshold = 0;
+					this.applySeasonality = false;
+					this.regressionDelta = 0d;
+					this.criticalRegressionDelta = 0d;
+				}
 	}
 }
