@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.regex.Pattern;
 
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 import com.overops.plugins.jenkins.query.ReportBuilder.QualityReport;
 import com.takipi.api.client.ApiClient;
@@ -55,33 +56,33 @@ import net.sf.json.JSONObject;
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 	private static final String SEPERATOR = ",";
-	private static boolean runRegressions = false;
+	private boolean runRegressions = false;
 
 	//General Settings
 	private String applicationName;
 	private String deploymentName;
-	private final String serviceId;
-	private final String regexFilter;
-	private final boolean markUnstable;
-	private final Integer printTopIssues;
+	private String serviceId;
+	private String regexFilter;
+	private boolean markUnstable;
+	private Integer printTopIssues;
 
 	//Quality Gates
-	private final JSONObject checkNewErrors;
+	private JSONObject checkNewErrors;
 	private boolean newEvents;
-	
-	private final JSONObject checkResurfacedErrors;
+
+	private JSONObject checkResurfacedErrors;
 	private boolean resurfacedErrors;
-	
-	private final JSONObject checkVolumeErrors;
+
+	private JSONObject checkVolumeErrors;
 	private Integer maxErrorVolume;
-	
-	private final JSONObject checkUniqueErrors;
+
+	private JSONObject checkUniqueErrors;
 	private Integer maxUniqueErrors;
-	
-	private final JSONObject checkCriticalErrors;
+
+	private JSONObject checkCriticalErrors;
 	private String criticalExceptionTypes;
-	
-	private final JSONObject checkRegressionErrors;
+
+	private JSONObject checkRegressionErrors;
 	private String activeTimespan;
 	private String baselineTimespan;
 	private Integer minVolumeThreshold;
@@ -89,11 +90,50 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private Double regressionDelta;
 	private Double criticalRegressionDelta;
 	private boolean applySeasonality;
-	
-	//Debugging Options
-	private final boolean debug;
 
+	//Debugging Options
+	private boolean debug;
+
+	// all settings are optional
 	@DataBoundConstructor
+	public QueryOverOps() {
+		// defaults
+		this.applicationName = null;
+		this.deploymentName = null;
+		this.serviceId = null;
+		this.regexFilter = null;
+		this.markUnstable = false;
+		this.printTopIssues = 5;
+
+		this.checkNewErrors = null;
+		this.newEvents = false;
+
+		this.checkResurfacedErrors = null;
+		this.resurfacedErrors = false;
+
+		this.checkVolumeErrors = null;
+		this.maxErrorVolume = 0;
+
+		this.checkUniqueErrors = null;
+		this.maxUniqueErrors = 0;
+
+		this.checkCriticalErrors = null;
+		this.criticalExceptionTypes = null;
+
+		this.checkRegressionErrors = null;
+		this.activeTimespan = "0";
+		this.baselineTimespan = "0";
+		this.minErrorRateThreshold = 0d;
+		this.minVolumeThreshold = 0;
+		this.applySeasonality = false;
+		this.regressionDelta = 0d;
+		this.criticalRegressionDelta = 0d;
+
+		this.debug = false;
+	}
+
+	// deprecated for improved Pipeline integration - see: https://jenkins.io/doc/developer/plugin-development/pipeline-integration/#constructor-vs-setters
+	@Deprecated
 	public QueryOverOps(String applicationName, String deploymentName, String serviceId, String regexFilter, boolean markUnstable, Integer printTopIssues, 
 			JSONObject checkNewErrors, boolean newEvents, JSONObject checkResurfacedErrors, boolean resurfacedErrors, 
 			JSONObject checkVolumeErrors, Integer maxErrorVolume, JSONObject checkUniqueErrors, 
@@ -101,132 +141,326 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			String baselineTimespan, Double minErrorRateThreshold, Integer minVolumeThreshold, boolean applySeasonality, Double regressionDelta, Double criticalRegressionDelta,
 			boolean debug) {
 
-		this.applicationName = applicationName;
-		this.deploymentName = deploymentName;
-		this.serviceId = serviceId;
-		this.regexFilter = regexFilter;
-		this.markUnstable = markUnstable;
-		this.printTopIssues = printTopIssues;
-		
-		this.checkNewErrors = checkNewErrors;
-		parseNewErrors();
-		
-		this.checkResurfacedErrors = checkResurfacedErrors;
-		parseResurfacedErrors();
-		
-		this.checkVolumeErrors = checkVolumeErrors;
-		parseVolumeErrors();
-		
-		this.checkUniqueErrors = checkUniqueErrors;
-		parseUniqueErrors();
-		
-		this.checkCriticalErrors = checkCriticalErrors;
-		parseCriticalExceptionTypes();
-		
-		this.checkRegressionErrors = checkRegressionErrors;
-		parseRegressionValue();
-	
-		this.debug = debug;
+		setApplicationName(applicationName);
+		setDeploymentName(deploymentName);
+		setServiceId(serviceId);
+
+		setRegexFilter(regexFilter);
+		setMarkUnstable(markUnstable);
+		setPrintTopIssues(printTopIssues);
+
+		setCheckNewErrors(checkNewErrors);
+		setCheckResurfacedErrors(checkResurfacedErrors);
+		setCheckVolumeErrors(checkVolumeErrors);
+		setCheckUniqueErrors(checkUniqueErrors);
+
+		setCheckCriticalErrors(checkCriticalErrors);
+
+		setCheckRegressionErrors(checkRegressionErrors);
+
+		setDebug(debug);
 	}
 
+	// getters() needed for config.jelly and Pipeline
+	// setters for Pipeline
 
-	// getters() needed for config.jelly
-
-	public String getapplicationName() {
+	public String getApplicationName() {
 		return applicationName;
 	}
 
-	public String getdeploymentName() {
+	@DataBoundSetter
+	public void setApplicationName(String applicationName) {
+		this.applicationName = applicationName;
+	}
+
+	public String getDeploymentName() {
 		return deploymentName;
 	}
 
-	public String getregexFilter() {
+	@DataBoundSetter
+	public void setDeploymentName(String deploymentName) {
+		this.deploymentName = deploymentName;
+	}
+
+	public String getRegexFilter() {
 		return regexFilter;
 	}
 
-	public String getserviceId() {
+	@DataBoundSetter
+	public void setRegexFilter(String regexFilter) {
+		this.regexFilter = regexFilter;
+	}
+
+	public String getServiceId() {
 		return serviceId;
 	}
 
-	public boolean getdebug() {
+	@DataBoundSetter
+	public void setServiceId(String serviceId) {
+		this.serviceId = serviceId;
+	}
+
+	public boolean getDebug() {
 		return debug;
 	}
 
-	public JSONObject getcheckNewErrors() {
+	@DataBoundSetter
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
+
+	public JSONObject getCheckNewErrors() {
 		return checkNewErrors;
 	}
-	
-	public JSONObject getcheckResurfacedErrors() {
+
+	@DataBoundSetter
+	public void setCheckNewErrors(JSONObject checkNewErrors) {
+		this.checkNewErrors = checkNewErrors;
+
+		// parse JSON object to get the newEvents value
+		if (checkNewErrors != null && !checkNewErrors.isNullObject()) {
+			setNewEvents(checkNewErrors.getBoolean("newEvents"));
+		}
+	}
+
+	public JSONObject getCheckResurfacedErrors() {
 		return checkResurfacedErrors;
 	}
 
-	public boolean getnewEvents() {
+	@DataBoundSetter
+	public void setCheckResurfacedErrors(JSONObject checkResurfacedErrors) {
+		this.checkResurfacedErrors = checkResurfacedErrors;
+
+		// parse JSON object to get the resurfacedErrors value
+		if (checkResurfacedErrors != null && !checkResurfacedErrors.isNullObject()) {
+			setResurfacedErrors(checkResurfacedErrors.getBoolean("resurfacedErrors"));
+		}
+	}
+
+	public boolean getResurfacedErrors() {
+		return resurfacedErrors;
+	}
+
+	@DataBoundSetter
+	public void setResurfacedErrors(boolean resurfacedErrors) {
+		this.resurfacedErrors = resurfacedErrors;
+	}
+
+	public boolean getNewEvents() {
 		return newEvents;
 	}
 
-	public JSONObject getcheckUniqueErrors() {
+	@DataBoundSetter
+	public void setNewEvents(boolean newEvents) {
+		this.newEvents = newEvents;
+	}
+
+	public JSONObject getCheckUniqueErrors() {
 		return checkUniqueErrors;
 	}
-	
-	public Integer getmaxUniqueErrors() {
+
+	@DataBoundSetter
+	public void setCheckUniqueErrors(JSONObject checkUniqueErrors) {
+		this.checkUniqueErrors = checkUniqueErrors;
+
+		//parse the JSON object to get the maxUniqueErrors value
+		if (checkUniqueErrors != null && !checkUniqueErrors.isNullObject()) {
+			String value = checkUniqueErrors.getString("maxUniqueErrors");
+			if (value != null && !value.isEmpty()) {
+				setMaxUniqueErrors(Integer.valueOf(value));
+			}
+		}
+	}
+
+	public Integer getMaxUniqueErrors() {
 		return maxUniqueErrors;
 	}
 
-	public JSONObject getcheckVolumeErrors() {
+	@DataBoundSetter
+	public void setMaxUniqueErrors(Integer maxUniqueErrors) {
+		this.maxUniqueErrors = maxUniqueErrors;
+	}
+
+	public JSONObject getCheckVolumeErrors() {
 		return checkVolumeErrors;
 	}
-	
-	public Integer getmaxErrorVolume() {
+
+	@DataBoundSetter
+	public void setCheckVolumeErrors(JSONObject checkVolumeErrors) {
+		this.checkVolumeErrors = checkVolumeErrors;
+
+		// parse JSON object to get maxErrorVolume value
+		if (checkVolumeErrors != null && !checkVolumeErrors.isNullObject()) {
+			String value = checkVolumeErrors.getString("maxErrorVolume");
+			if (value != null && !value.isEmpty()) {
+				setMaxErrorVolume(Integer.valueOf(value));
+			}
+		}
+	}
+
+	public Integer getMaxErrorVolume() {
 		return maxErrorVolume;
 	}
 
-	public JSONObject getcheckCriticalErrors() {
+	@DataBoundSetter
+	public void setMaxErrorVolume(Integer maxErrorVolume) {
+		this.maxErrorVolume = maxErrorVolume;
+	}
+
+	public JSONObject getCheckCriticalErrors() {
 		return checkCriticalErrors;
 	}
-	
-	public JSONObject getcheckRegressionErrors() {
+
+	@DataBoundSetter
+	public void setCheckCriticalErrors(JSONObject checkCriticalErrors) {
+		this.checkCriticalErrors = checkCriticalErrors;
+
+		// parse the JSON object to get the criticalExceptionTypes value
+		if (checkCriticalErrors != null && !checkCriticalErrors.isNullObject()) {
+			String value = checkCriticalErrors.getString("criticalExceptionTypes");
+			setCriticalExceptionTypes(value);
+		}
+
+	}
+
+	public JSONObject getCheckRegressionErrors() {
 		return checkRegressionErrors;
 	}
-	
-	public String getcriticalExceptionTypes() {
+
+	@DataBoundSetter
+	public void setCheckRegressionErrors(JSONObject checkRegressionErrors) {
+		this.checkRegressionErrors = checkRegressionErrors;
+
+		//parse the JSON object to get the checkRegressionErrors values
+		if (checkRegressionErrors != null && !checkRegressionErrors.isNullObject()) {
+			String value = checkRegressionErrors.getString ("activeTimespan");
+			if (value != null && !value.isEmpty()) {
+				setActiveTimespan(value);
+			}
+
+			value = checkRegressionErrors.getString ("baselineTimespan");
+			if (value != null && !value.isEmpty()) {
+				setBaselineTimespan(value);
+			}
+
+			value = checkRegressionErrors.getString ("minErrorRateThreshold");
+			if (value != null && !value.isEmpty()) {
+				setMinErrorRateThreshold(Double.valueOf(value));
+			}
+
+			value = checkRegressionErrors.getString ("minVolumeThreshold");
+			if (value != null && !value.isEmpty()) {
+				setMinVolumeThreshold(Integer.valueOf(value));
+			}
+
+			setApplySeasonality(checkRegressionErrors.getBoolean("applySeasonality"));
+
+			value = checkRegressionErrors.getString ("regressionDelta");
+			if (value != null && !value.isEmpty()) {
+				setRegressionDelta(Double.valueOf(value));
+			}
+
+			value = checkRegressionErrors.getString ("criticalRegressionDelta");
+			if (value != null && !value.isEmpty()) {
+				setCriticalRegressionDelta(Double.valueOf(value));
+			}
+		}
+
+	}
+
+	public String getCriticalExceptionTypes() {
 		return criticalExceptionTypes;
 	}
 
-	public String getactiveTimespan() {
+	@DataBoundSetter
+	public void setCriticalExceptionTypes(String criticalExceptionTypes) {
+		this.criticalExceptionTypes = criticalExceptionTypes;
+	}
+
+	public String getActiveTimespan() {
 		return activeTimespan;
 	}
 
-	public String getbaselineTimespan() {
+	@DataBoundSetter
+	public void setActiveTimespan(String activeTimespan) {
+		this.activeTimespan = activeTimespan;
+	}
+
+	public String getBaselineTimespan() {
 		return baselineTimespan;
 	}
 
-	public Double getminErrorRateThreshold() {
+	@DataBoundSetter
+	public void setBaselineTimespan(String baselineTimespan) {
+		this.baselineTimespan = baselineTimespan;
+
+		// default is 0, but must be > 0. this must be set to run regressions
+		runRegressions = true;
+	}
+
+	public Double getMinErrorRateThreshold() {
 		return minErrorRateThreshold;
 	}
 
-	public Double getcriticalRegressionDelta() {
+	@DataBoundSetter
+	public void setMinErrorRateThreshold(Double minErrorRateThreshold) {
+		this.minErrorRateThreshold = minErrorRateThreshold;
+	}
+
+	public Double getCriticalRegressionDelta() {
 		return criticalRegressionDelta;
 	}
 
-	public Integer getminVolumeThreshold() {
+	@DataBoundSetter
+	public void setCriticalRegressionDelta(Double criticalRegressionDelta) {
+		this.criticalRegressionDelta = criticalRegressionDelta;
+	}
+
+	public Integer getMinVolumeThreshold() {
 		return minVolumeThreshold;
 	}
 
-	public Double getregressionDelta() {
+	@DataBoundSetter
+	public void setMinVolumeThreshold(Integer minVolumeThreshold) {
+		this.minVolumeThreshold = minVolumeThreshold;
+	}
+
+	public Double getRegressionDelta() {
 		return regressionDelta;
 	}
 
-	public boolean getapplySeasonality() {
+	@DataBoundSetter
+	public void setRegressionDelta(Double regressionDelta) {
+		this.regressionDelta = regressionDelta;
+	}
+
+	public boolean getApplySeasonality() {
 		return applySeasonality;
 	}
 
-	public Integer getprintTopIssues() {
+	@DataBoundSetter
+	public void setApplySeasonality(boolean applySeasonality) {
+		this.applySeasonality = applySeasonality;
+	}
+
+	public Integer getPrintTopIssues() {
 		return printTopIssues;
 	}
 
-	public boolean getmarkUnstable() {
+	@DataBoundSetter
+	public void setPrintTopIssues(Integer printTopIssues) {
+		this.printTopIssues = printTopIssues;
+	}
+
+	public boolean getMarkUnstable() {
 		return markUnstable;
 	}
+
+	@DataBoundSetter
+	public void setMarkUnstable(boolean markUnstable) {
+		this.markUnstable = markUnstable;
+	}
+
 
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -304,7 +538,37 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			run.setResult(Result.UNSTABLE);
 		}
 	}
-	
+
+	@Override
+	public String toString() {
+		return "QueryOverOps[ " +
+			"applicationName=" + this.applicationName + ", " +
+			"deploymentName=" + this.deploymentName + ", " +
+			"serviceId=" + this.serviceId + ", " +
+			"regexFilter=" + this.regexFilter + ", " +
+			"markUnstable=" + this.markUnstable + ", " +
+			"printTopIssues=" + this.printTopIssues + ", " +
+			"checkNewErrors=" + this.checkNewErrors + ", " +
+			"newEvents=" + this.newEvents + ", " +
+			"checkResurfacedErrors=" + this.checkResurfacedErrors + ", " +
+			"resurfacedErrors=" + this.resurfacedErrors + ", " +
+			"checkVolumeErrors=" + this.checkVolumeErrors + ", " +
+			"maxErrorVolume=" + this.maxErrorVolume + ", " +
+			"checkUniqueErrors=" + this.checkUniqueErrors + ", " +
+			"maxUniqueErrors=" + this.maxUniqueErrors + ", " +
+			"checkCriticalErrors=" + this.checkCriticalErrors + ", " +
+			"criticalExceptionTypes=" + this.criticalExceptionTypes + ", " +
+			"checkRegressionErrors=" + this.checkRegressionErrors + ", " +
+			"activeTimespan=" + this.activeTimespan + ", " +
+			"baselineTimespan=" + this.baselineTimespan + ", " +
+			"minVolumeThreshold=" + this.minVolumeThreshold + ", " +
+			"minErrorRateThreshold=" + this.minErrorRateThreshold + ", " +
+			"regressionDelta=" + this.regressionDelta + ", " +
+			"criticalRegressionDelta=" + this.criticalRegressionDelta + ", " +
+			"applySeasonality=" + this.applySeasonality + ", " +
+			"debug=" + this.debug + " ]";
+	}
+
 	//setup the regression object
 	private RegressionInput setupRegressionData(Run<?, ?> run, SummarizedView allEventsView, TaskListener listener, PrintStream printStream) 
 			throws InterruptedException, IOException {
@@ -317,10 +581,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		input.applictations = parseArrayString(expandedAppName, printStream, "Application Name");
 		input.deployments = parseArrayString(expandedDepName, printStream, "Deployment Name");
 		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream,
-				"Critical Exception Types");	
+				"Critical Exception Types");
 
-		if (checkRegressionErrors != null) {
-			runRegressions = true;
+		if (runRegressions) {
 			input.activeTimespan = convertToMinutes(activeTimespan);
 			input.baselineTime = baselineTimespan;
 			input.baselineTimespan = convertToMinutes(baselineTimespan);
@@ -330,10 +593,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			input.criticalRegressionDelta = criticalRegressionDelta;
 			input.applySeasonality = applySeasonality;
 			input.validate();
-		} else {
-			runRegressions = false;
 		}
-		
+
 		printInputs(printStream, input);
 
 		return input;
@@ -459,95 +720,5 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			printStream.println(output.toString());
 		}
 	}
-	
-	//parse the JSON object to get the criticalExceptionTypes value
-	private void parseCriticalExceptionTypes  () {
-		if (checkCriticalErrors != null && !checkCriticalErrors.isNullObject()) {
-			String value = checkCriticalErrors.getString ("criticalExceptionTypes");
-			this.criticalExceptionTypes = value;
-				} else {
-						this.criticalExceptionTypes = null;
-				}
-	}
-	
-	//parse the JSON object to get the maxErrorVolume value
-	private void parseVolumeErrors  () {
-		if (checkVolumeErrors != null && !checkVolumeErrors.isNullObject()) {
-			String value = checkVolumeErrors.getString ("maxErrorVolume");
-			if (value != null && !value.isEmpty()) {
-				this.maxErrorVolume = Integer.valueOf(value);
-			}
-				} else {
-						this.maxErrorVolume = 0;
-				}
-	}
-	
-	//parse the JSON object to get the maxUniqueVolume value
-	private void parseUniqueErrors  () {
-		if (checkUniqueErrors != null && !checkUniqueErrors.isNullObject()) {
-			String value = checkUniqueErrors.getString ("maxUniqueErrors");
-			if (value != null && !value.isEmpty()) {
-				this.maxUniqueErrors = Integer.valueOf(value);
-			}
-				} else {
-						this.maxUniqueErrors = 0;
-				}
-	}
-	
-	//parse the JSON object to get the checkNewErrors value
-	private void parseNewErrors() {
-		if (checkNewErrors != null && !checkNewErrors.isNullObject()) {
-						this.newEvents = true;
-				} else {
-						this.newEvents = false;
-				}
-	}
-	
-	//parse the JSON object to get the checkResurfacedErrors value
-	private void parseResurfacedErrors() {
-		if (checkResurfacedErrors != null && !checkResurfacedErrors.isNullObject()) {
-						this.resurfacedErrors = true;
-				} else {
-						this.resurfacedErrors = false;
-				}
-	}
-	
-	//parse the JSON object to get the checkRegressionErrors values
-	private void parseRegressionValue  () {
-		if (checkRegressionErrors != null && !checkRegressionErrors.isNullObject()) {
-			String value = checkRegressionErrors.getString ("activeTimespan");
-			if (value != null && !value.isEmpty()) {
-				this.activeTimespan = value;
-			}
-			value = checkRegressionErrors.getString ("baselineTimespan");
-			if (value != null && !value.isEmpty()) {
-				this.baselineTimespan = value;
-			}
-			value = checkRegressionErrors.getString ("minErrorRateThreshold");
-			if (value != null && !value.isEmpty()) {
-				this.minErrorRateThreshold = Double.valueOf(value);
-			}
-			value = checkRegressionErrors.getString ("minVolumeThreshold");
-			if (value != null && !value.isEmpty()) {
-				this.minVolumeThreshold = Integer.valueOf(value);
-			}
-			this.applySeasonality = checkRegressionErrors.getBoolean ("applySeasonality");
-			value = checkRegressionErrors.getString ("regressionDelta");
-			if (value != null && !value.isEmpty()) {
-				this.regressionDelta = Double.valueOf(value);
-			}
-			value = checkRegressionErrors.getString ("criticalRegressionDelta");
-			if (value != null && !value.isEmpty()) {
-				this.criticalRegressionDelta = Double.valueOf(value);
-			}
-				} else {
-						this.activeTimespan = "0";
-					this.baselineTimespan = "0";
-					this.minErrorRateThreshold = 0d;
-					this.minVolumeThreshold = 0;
-					this.applySeasonality = false;
-					this.regressionDelta = 0d;
-					this.criticalRegressionDelta = 0d;
-				}
-	}
+
 }
