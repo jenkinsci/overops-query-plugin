@@ -69,10 +69,9 @@ Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll 
 * If populated, the plugin will filter the data for the specific deployment name in OverOps
 * If blank, no deployment filter will be applied in the query.
 
-
 ### Environment ID
 
-The OverOps environment identifier (e.g S4567) to inspect data for this build. If no value is provided here, the value provided in the global Jenkins plug settings will be used.
+The OverOps environment identifier (e.g S4567) to inspect data for this build. If no value is provided here, the value provided in the global Jenkins plugin settings will be used.
 
 ### Regex Filter
 
@@ -100,11 +99,11 @@ Detect all resurfaced errors in the build. If found, the build will be marked as
 
 ### Total Error Volume Gate
 
-Set the max total error volume allowed. If exceeded the build will be marked as unstable. 
+Set the max total error volume allowed. If exceeded the build will be marked as unstable.
 
 ### Unique Error Volume Gate
 
-Set the max unique error volume allowed. If exceeded the build will be marked as unstable. 
+Set the max unique error volume allowed. If exceeded the build will be marked as unstable.
 
 ### Critical Exception Type Gate
 
@@ -131,7 +130,7 @@ The time window (in minutes) inspected to search for new issues and regressions.
 
 #### Baseline Time Window  (d - day, h - hour, m - minute)
 
-The time window against which events in the active window are compared to test for regressions. For using the Increaing Error Gate, a baseline time window is required
+The time window against which events in the active window are compared to test for regressions. For using the Increasing Error Gate, a baseline time window is required
 
 * **Example:** 14d would be a two week baseline time window.
 
@@ -167,7 +166,86 @@ The change in percentage between an event's rate in the active time span compare
 
 If peaks have been seen in baseline window, then this would be considered normal and not a regression. Should the plugin identify an equal or matching peak in the baseline time window, or two peaks of greater than 50% of the volume seen in the active window, the event will not be marked as a regression.
 
-
 ### Debug Mode
 
 If checked, all queries and results will be displayed in the OverOps reliability report. For debugging purposes only.
+
+## Pipeline
+
+This plugin is compatible with Jenkins Pipeline.
+
+```groovy
+stage('OverOps') {
+  steps {
+    OverOpsQuery(
+      // build configuration
+      applicationName: '${JOB_NAME}',
+      deploymentName: '${JOB_NAME}-${BUILD_NUMBER}',
+      serviceId: 'Sxxxxx',
+
+      // filter out event types
+      regexFilter: '"type":\\"*(Timer|Logged Warning)',
+
+      // mark build unstable
+      markUnstable: true,
+
+      // show top X issues
+      printTopIssues: 5,
+
+      // new error gate
+      newEvents: true,
+
+      // resurfaced error gate
+      resurfacedErrors: true,
+
+      // total error volume gate
+      maxErrorVolume: 0,
+
+      // unique error volume gate
+      maxUniqueErrors: 0,
+
+      // critical exception type gate
+      criticalExceptionTypes: 'NullPointerException,IndexOutOfBoundsException,InvalidCastException,AssertionError',
+
+      // increasing errors gate
+      activeTimespan: '12h',
+      baselineTimespan: '7d',
+      minVolumeThreshold: 20,
+      minErrorRateThreshold: 0.1,
+      regressionDelta: 0.5,
+      criticalRegressionDelta: 1.0,
+      applySeasonality: true,
+
+      // debug mode
+      debug: false
+    )
+    echo "OverOps Reliability Report: ${BUILD_URL}OverOpsReport/"
+  }
+}
+```
+
+### Parameters
+
+*All parameters are optional.*
+
+| Parameter | Type | Default Value | Notes |
+|---------|------|---------------|-------|
+| [`applicationName`](#application-name) | String | `null` |
+| [`deploymentName`](#deployment-name) | String | `null` |
+| [`serviceId`](#environment-id) | String | `null` | Environment ID, defaults to global setting
+| [`regexFilter`](#regex-filter) | String | `null` |
+| [`markUnstable`](#mark-build-unstable) | boolean | `false` |
+| [`printTopIssues`](#show-top-issues) | Integer | 5 |
+| [`newEvents`](#new-error-gate) | boolean | false |
+| [`resurfacedErrors`](#resurfaced-error-gate) | boolean | false |
+| [`maxErrorVolume`](#total-error-volume-gate) | Integer | 0 |
+| [`maxUniqueErrors`](#unique-error-volume-gate) | Integer | 0 |
+|[`criticalExceptionTypes`](#critical-exception-type-gate) | String | null |
+| [`activeTimespan`](#active-time-window-d---day-h---hour-m---minute) | String | null |
+| [`baselineTimespan`](#baseline-time-window--d---day-h---hour-m---minute) | String | null |
+| [`minVolumeThreshold`](#event-volume-threshold) | Integer | 0 |
+| [`minErrorRateThreshold`](#event-rate-threshold-0-1) | Double | 0 |
+| [`regressionDelta`](#regression-delta-0-1) | Double | 0 |
+| [`criticalRegressionDelta`](#critical-regression-threshold-0-1) | Double | 0 |
+| [`applySeasonality`](#apply-seasonality) | boolean | false |
+| [`debug`](#debug-mode) | boolean | false |
