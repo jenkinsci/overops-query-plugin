@@ -124,7 +124,7 @@ NullPointerException,IndexOutOfBoundsException
 
 #### Active Time Window (d - day, h - hour, m - minute)
 
-The time window (in minutes) inspected to search for new issues and regressions. To compare the current build with a baseline time window, leave the value at zero.
+The time window inspected to search for new issues and regressions. To compare the current build with a baseline time window, leave the value at zero.
 
 * **Example:** 1d would be one day active time window.
 
@@ -249,3 +249,27 @@ stage('OverOps') {
 | [`criticalRegressionDelta`](#critical-regression-threshold-0-1) | Double | 0 |
 | [`applySeasonality`](#apply-seasonality) | boolean | false |
 | [`debug`](#debug-mode) | boolean | false |
+
+### Migrating from v1 to v2
+
+Starting in v2, all parameters are optional. You may remove any parameters from your Jenkinsfile which are set to the default value.
+
+#### Breaking Changes
+
+* In v2, `activeTimespan` and `baselineTimespan` are now Strings, not Integers. In v1, these values were time in minutes. In v2, append `m` for minutes, `h` for hours, and `d` for days.
+
+    > *For example:*  
+    > `10080` (int, in minutes) &rarr; `'10080m'` or `'168h'` or `'7d'`
+
+* The `verbose` parameter has been renamed to `debug`.
+
+* The `serverWait` and `showResults` parameters have been removed.
+
+| Parameter | v1 | v2 | Notes |
+|---|-----|-----|---|
+|`activeTimespan`|`10080`|`'7d'`| Now a String |
+|`baselineTimespan`|`720`|`'12h'`| Now a String |
+|`verbose`|`false`| |Replaced by `debug`|
+|`debug`| |`false`|Previously `verbose`|
+|`serverWait`|`60`| | Removed
+|`showResults`|`true`| | Removed
