@@ -226,29 +226,29 @@ stage('OverOps') {
 
 ### Parameters
 
-*All parameters are optional.*
+All parameters are optional.
 
-| Parameter | Type | Default Value | Notes |
-|---------|------|---------------|-------|
+| Parameter | Type | Default Value |
+|---------|------|---------------|
 | [`applicationName`](#application-name) | String | `null` |
 | [`deploymentName`](#deployment-name) | String | `null` |
-| [`serviceId`](#environment-id) | String | `null` | Environment ID, defaults to global setting
+| [`serviceId`](#environment-id) | String | `null` |
 | [`regexFilter`](#regex-filter) | String | `null` |
 | [`markUnstable`](#mark-build-unstable) | boolean | `false` |
-| [`printTopIssues`](#show-top-issues) | Integer | 5 |
-| [`newEvents`](#new-error-gate) | boolean | false |
-| [`resurfacedErrors`](#resurfaced-error-gate) | boolean | false |
-| [`maxErrorVolume`](#total-error-volume-gate) | Integer | 0 |
-| [`maxUniqueErrors`](#unique-error-volume-gate) | Integer | 0 |
-|[`criticalExceptionTypes`](#critical-exception-type-gate) | String | null |
-| [`activeTimespan`](#active-time-window-d---day-h---hour-m---minute) | String | null |
-| [`baselineTimespan`](#baseline-time-window--d---day-h---hour-m---minute) | String | null |
-| [`minVolumeThreshold`](#event-volume-threshold) | Integer | 0 |
-| [`minErrorRateThreshold`](#event-rate-threshold-0-1) | Double | 0 |
-| [`regressionDelta`](#regression-delta-0-1) | Double | 0 |
-| [`criticalRegressionDelta`](#critical-regression-threshold-0-1) | Double | 0 |
-| [`applySeasonality`](#apply-seasonality) | boolean | false |
-| [`debug`](#debug-mode) | boolean | false |
+| [`printTopIssues`](#show-top-issues) | Integer | `5` |
+| [`newEvents`](#new-error-gate) | boolean | `false` |
+| [`resurfacedErrors`](#resurfaced-error-gate) | boolean | `false` |
+| [`maxErrorVolume`](#total-error-volume-gate) | Integer | `0` |
+| [`maxUniqueErrors`](#unique-error-volume-gate) | Integer | `0` |
+|[`criticalExceptionTypes`](#critical-exception-type-gate) | String | `null` |
+| [`activeTimespan`](#active-time-window-d---day-h---hour-m---minute) | String | `null` |
+| [`baselineTimespan`](#baseline-time-window--d---day-h---hour-m---minute) | String | `null` |
+| [`minVolumeThreshold`](#event-volume-threshold) | Integer | `0` |
+| [`minErrorRateThreshold`](#event-rate-threshold-0-1) | Double | `0` |
+| [`regressionDelta`](#regression-delta-0-1) | Double | `0` |
+| [`criticalRegressionDelta`](#critical-regression-threshold-0-1) | Double | `0` |
+| [`applySeasonality`](#apply-seasonality) | boolean | `false` |
+| [`debug`](#debug-mode) | boolean | `false` |
 
 ### Migrating from v1 to v2
 
