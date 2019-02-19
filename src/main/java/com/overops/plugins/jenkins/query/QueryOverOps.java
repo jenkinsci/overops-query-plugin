@@ -395,7 +395,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.baselineTimespan = baselineTimespan;
 
 		// default is 0, but must be > 0. this must be set to run regressions
-		runRegressions = true;
+		if (convertToMinutes(baselineTimespan) > 0) {
+			runRegressions = true;
+		}
 	}
 
 	public Double getMinErrorRateThreshold() {
