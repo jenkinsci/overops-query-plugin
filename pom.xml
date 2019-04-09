@@ -81,19 +81,19 @@
 		<dependency>
 			<groupId>com.takipi</groupId>
 			<artifactId>api-client</artifactId>
-			<version>2.13.0</version>
+			<version>2.20.0</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.takipi</groupId>
 		    <artifactId>api-client-util</artifactId>
-		    <version>2.13.0</version>
+		    <version>2.20.0</version>
 		</dependency>
 	</dependencies>
 	<developers>
 		<developer>
-			<id>joeOffenberg</id>
-			<name>Joe Offenberg</name>
-			<email>joe.offenberg@overops.com</email>
+			<id>ericmizell</id>
+			<name>Eric Mizell</name>
+			<email>eric.mizell@overops.com</email>
 		</developer>
 		<developer>
 			<id>chook</id>

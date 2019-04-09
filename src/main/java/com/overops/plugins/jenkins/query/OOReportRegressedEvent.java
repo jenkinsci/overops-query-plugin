@@ -19,7 +19,7 @@ public class OOReportRegressedEvent extends OOReportEvent{
     
     @Override
     public String getEventRate() {
-    		return RegressionStringUtil.getRegressedEventRate(event, baselineHits, baselineInvocations);
+    		return RegressionStringUtil.getRegressedEventRate(getEvent(), baselineHits, baselineInvocations);
 	}
     
     public long getBaselineHits() {

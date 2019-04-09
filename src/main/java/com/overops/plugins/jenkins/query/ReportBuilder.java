@@ -379,6 +379,7 @@ public class ReportBuilder {
 			regressions = getAllRegressions(apiClient, input, rateRegression, reportVolume.filter);
 			if (regressions != null && regressions.size() > 0) {
 				hasRegressions = true;
+				replaceSourceId2(regressions);
 			}
 		}
 		
@@ -400,19 +401,28 @@ public class ReportBuilder {
 		boolean newErrors = false;
 		if (qualityGateReport.getNewErrors() != null && qualityGateReport.getNewErrors().size() > 0) {
 			newErrors = true;
+			replaceSourceId(qualityGateReport.getNewErrors());
 		}
 		
 		//resurfaced error gate
 		boolean resurfaced = false;
 		if (qualityGateReport.getResurfacedErrors() != null && qualityGateReport.getResurfacedErrors().size() > 0) {
 			resurfaced = true;
+			replaceSourceId(qualityGateReport.getResurfacedErrors());
 		}
 		
 		//critical error gate
 		boolean critical = false;
 		if (qualityGateReport.getCriticalErrors() != null  && qualityGateReport.getCriticalErrors().size() > 0) {
 			critical = true;
+			replaceSourceId(qualityGateReport.getCriticalErrors());
 		}
+		
+		//top errors
+		if (qualityGateReport.getTopErrors() != null  && qualityGateReport.getTopErrors().size() > 0) {
+			replaceSourceId(qualityGateReport.getTopErrors());
+		}
+		
 		boolean checkCritical = false;
 		if (input.criticalExceptionTypes != null && input.criticalExceptionTypes.size() > 0) {
 			checkCritical = true;
@@ -430,6 +440,35 @@ public class ReportBuilder {
 				qualityGateReport.getResurfacedErrors(), qualityGateReport.getTotalErrorCount(),
 				qualityGateReport.getUniqueErrorCount(), unstable, newEvents, resurfacedEvents, checkCritical, checkMaxEventGate,
 				checkUniqueEventGate, runRegressions, maxEventVolume, maxUniqueErrors, markedUnstable);
+	}
+	
+	//for each event, replace the source ID in the ARC link with the number 4 (which means Jenkins)
+	private static void replaceSourceId (List<OOReportEvent> events) {
+		for (OOReportEvent ooReportEvent : events) {
+			String arcLink = replaceSourceIdInArcLink(ooReportEvent.getARCLink());
+			ooReportEvent.setArcLink(arcLink);
+		}
+	}
+	
+	//for each event, replace the source ID in the ARC link with the number 4 (which means Jenkins)
+	private static void replaceSourceId2 (List<OOReportRegressedEvent> events) {
+		for (OOReportEvent ooReportEvent : events) {
+			String arcLink = replaceSourceIdInArcLink(ooReportEvent.getARCLink());
+			ooReportEvent.setArcLink(arcLink);
+		}
+	}
+	
+	private static String replaceSourceIdInArcLink(String arcLink) {
+		if (arcLink == null) {
+			return arcLink;
+		}
+		String returnString;
+		CharSequence target = "source=43";
+		CharSequence replacement = "source=4";
+				
+		returnString = arcLink.replace(target, replacement);
+		
+		return returnString;	
 	}
 		
 	private static List<OOReportRegressedEvent> getAllRegressions(ApiClient apiClient, 

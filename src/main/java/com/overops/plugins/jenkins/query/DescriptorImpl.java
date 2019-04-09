@@ -8,6 +8,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.verb.POST;
 
 import com.takipi.api.client.ApiClient;
+import com.takipi.api.client.RemoteApiClient;
 import com.takipi.api.client.data.service.SummarizedService;
 import com.takipi.api.client.util.client.ClientUtil;
 import com.takipi.api.core.url.UrlClient.Response;
@@ -113,7 +114,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		try {
 			String apiKey = Secret.toString(overOpsAPIKey);
-			ApiClient apiClient = ApiClient.newBuilder().setHostname(overOpsURL).setApiKey(apiKey).build();
+			RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(overOpsURL).setApiKey(apiKey).build();
 			
 			Response<String> response = apiClient.testConnection();
 			    

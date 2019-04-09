@@ -35,12 +35,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import com.overops.plugins.jenkins.query.ReportBuilder.QualityReport;
-import com.takipi.api.client.ApiClient;
+import com.takipi.api.client.RemoteApiClient;
 import com.takipi.api.client.data.view.SummarizedView;
+import com.takipi.api.client.observe.Observer;
 import com.takipi.api.client.util.regression.RegressionInput;
 import com.takipi.api.client.util.view.ViewUtil;
-import com.takipi.api.core.url.UrlClient.Operation;
-import com.takipi.api.core.url.UrlClient.UrlClientObserver;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -515,13 +514,13 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		//validate inputs first
 		validateInputs(printStream);
 
-		ApiClient apiClient = ApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
+		RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 		
 		if ((printStream != null) && (debug)) {
 			apiClient.addObserver(new ApiClientObserver(printStream, debug));
 		}
 		
-		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
+		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
 	
 		if (allEventsView == null) {
 			throw new IllegalStateException(
@@ -694,7 +693,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		}
 	}
 
-	protected static class ApiClientObserver implements UrlClientObserver {
+	protected static class ApiClientObserver implements Observer {
 
 		private final PrintStream printStream;
 		private final boolean verbose;
@@ -705,7 +704,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		}
 
 		@Override
-		public void observe(Operation operation, String url, String response, long time) {
+		public void observe(Operation operation, String url, String request, String response, int responseCode, long time) {
 			StringBuilder output = new StringBuilder();
 
 			output.append(String.valueOf(operation));
