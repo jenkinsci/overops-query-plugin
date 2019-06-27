@@ -58,9 +58,9 @@
 	             <j:if test="${!it.passedNewErrorGate}"> 
 		            	<tr style="font-weight:bold"><td style="color:#ff0000">${it.newErrorSummary}</td></tr>
 		           	<table style="width:100%">
-		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		            <tr style="font-weight:bold"><td>Event</td><td>Application(s)</td><td>Introduced by</td><td>Volume</td></tr>
 		             <j:forEach items="${it.newEvents}" var="k">
-		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.applications}</td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
 		             </j:forEach>
 		            </table>
 	            </j:if>
@@ -78,9 +78,9 @@
 	            <j:if test="${!it.passedResurfacedErrorGate}">
 	            		<tr style="font-weight:bold"><td style="color:#ff0000">${it.resurfacedErrorSummary}</td></tr>
 		            <table style="width:100%">
-		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		            <tr style="font-weight:bold"><td>Event</td><td>Application(s)</td><td>Introduced by</td><td>Volume</td></tr>
 		             <j:forEach items="${it.resurfacedEvents}" var="k">
-		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.applications}</td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
 		             </j:forEach>
 		            </table>
 	            </j:if>
@@ -107,9 +107,9 @@
 		        </j:if>
 		        <j:if test="${it.hasTopErrors}">
 			            <table style="width:100%">
-			            <tr style="font-weight:bold"><td>Top Events Affecting Unique/Total Error Gates</td> <td>Introduced by</td><td>Volume</td></tr>
+			            <tr style="font-weight:bold"><td>Top Events Affecting Unique/Total Error Gates</td><td>Application(s)</td><td>Introduced by</td><td>Volume</td></tr>
 			             <j:forEach items="${it.topEvents}" var="k">
-			                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+			                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.applications}</td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
 			             </j:forEach>
 			            </table>					
 		        </j:if>	 
@@ -132,9 +132,9 @@
 	            <j:if test="${!it.passedCriticalErrorGate}">
 	            		<tr style="font-weight:bold"><td style="color:#ff0000">${it.criticalErrorSummary}</td></tr>
 		            <table style="width:100%">
-		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume</td></tr>
+		            <tr style="font-weight:bold"><td>Event</td><td>Application(s)</td><td>Introduced by</td><td>Volume</td></tr>
 		             <j:forEach items="${it.criticalEvents}" var="k">
-		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
+		                <tr><td><a href="${k.ARCLink}" target="_blank"> ${k.eventSummary}</a></td><td>${k.applications}</td><td>${k.introducedBy}</td><td>${k.hits}</td></tr>
 		             </j:forEach>
 		            </table>
 	            </j:if>
@@ -152,9 +152,9 @@
 				<j:if test="${!it.passedRegressedEvents}">
 				    <tr style="font-weight:bold"><td style="color:#ff0000">${it.regressionSumarry}</td></tr>
 		            <table style="width:100%">
-		            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
+		            <tr style="font-weight:bold"><td>Event</td><td>Application(s)</td><td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
 		             <j:forEach items="${it.regressedEvents}" var="i">
-		                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
+		                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${k.applications}</td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
 		             </j:forEach>
 		            </table>
 		        </j:if>

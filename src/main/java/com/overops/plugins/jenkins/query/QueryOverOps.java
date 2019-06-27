@@ -61,6 +61,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private String applicationName;
 	private String deploymentName;
 	private String serviceId;
+	private String url;
+	private String apiToken;
 	private String regexFilter;
 	private boolean markUnstable;
 	private Integer printTopIssues;
@@ -628,17 +630,15 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			}
 		}
 
-		String serviceId;
+		if ((this.serviceId == null) || (this.serviceId.isEmpty())) {
+			this.serviceId = getDescriptor().getOverOpsSID();
+		} 
 
-		if ((this.serviceId != null) && (!this.serviceId.isEmpty())) {
-			serviceId = this.serviceId;
-		} else {
-			serviceId = getDescriptor().getOverOpsSID();
-		}
-
-		if (serviceId == null) {
+		if (this.serviceId == null) {
 			throw new IllegalArgumentException("Missing environment Id");
 		}
+		
+		this.serviceId = this.serviceId.toUpperCase();
 
 	}
 	

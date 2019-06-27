@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Objects;
 import com.google.gson.Gson;
 import com.takipi.api.client.ApiClient;
 import com.takipi.api.client.result.event.EventResult;
@@ -23,57 +22,6 @@ import com.takipi.api.client.util.regression.RegressionStringUtil;
 import com.takipi.api.client.util.regression.RegressionUtil;
 
 public class ReportBuilder {
-	
-	private static class UniqueEventKey {
-		
-		private EventResult event;
-		
-		protected UniqueEventKey(EventResult event) {
-			this.event = event;
-		}
-		
-		@Override
-		public int hashCode() {
-			
-			if (event.error_location == null) {
-				return super.hashCode();
-			}
-			
-			return event.error_location.hashCode();
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof UniqueEventKey)) {
-				return false;
-			}
-			
-			UniqueEventKey other = (UniqueEventKey)obj;
-
-			
-			if (!Objects.equal(event.type, other.event.type)) {
-				return false;
-			}
-			
-			if (!Objects.equal(event.error_origin, other.event.error_origin)) {
-				return false;
-			}
-			
-			if (!Objects.equal(event.error_location, other.event.error_location)) {
-				return false;
-			}
-			
-			if (!Objects.equal(event.name, other.event.name)) {
-				return false;
-			}
-			
-			if (!Objects.equal(event.call_stack_group, other.event.call_stack_group)) {
-				return false;
-			}
-						
-			return true;
-		}
-	}
 	
 	public static class QualityReport {
 
