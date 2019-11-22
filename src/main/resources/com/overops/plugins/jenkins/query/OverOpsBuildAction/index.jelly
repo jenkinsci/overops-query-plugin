@@ -120,10 +120,6 @@
       .overops-quality-report .muted {
         color: hsl(0, 0%, 60%);
       }
-
-      passed {
-        color: #008000;
-      }
     </style>
     <l:main-panel>
       <section class="overops-quality-report">
