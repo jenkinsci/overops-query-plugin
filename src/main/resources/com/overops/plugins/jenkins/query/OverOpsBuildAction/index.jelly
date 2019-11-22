@@ -380,7 +380,7 @@
                       <td>
                         <a href="${i.ARCLink}" target="_blank">${i.eventSummary}</a>
                       </td>
-                      <td>${k.applications}</td>
+                      <td>${i.applications}</td>
                       <td>${i.introducedBy}</td>
                       <td>${i.eventRate}</td>
                       <td>${i.type}</td>
