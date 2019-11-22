@@ -367,11 +367,11 @@
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <td>Event</td>
-                    <td>Application(s)</td>
-                    <td>Introduced by</td>
-                    <td>Volume / Rate</td>
-                    <td>Type</td>
+                    <th>Event</td>
+                    <th>Application(s)</th>
+                    <th>Introduced by</th>
+                    <th>Volume / Rate</th>
+                    <th>Type</th>
                   </tr>
                 </thead>
                 <tbody>
