@@ -367,7 +367,7 @@
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <th>Event</td>
+                    <th>Event</th>
                     <th>Application(s)</th>
                     <th>Introduced by</th>
                     <th>Volume / Rate</th>
