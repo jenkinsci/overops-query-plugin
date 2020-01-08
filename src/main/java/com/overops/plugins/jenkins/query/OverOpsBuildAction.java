@@ -227,7 +227,7 @@ public class OverOpsBuildAction implements Action {
 	
 	public String getRegressionSumarry() {
 		if (!getPassedRegressedEvents()) {
-			return "Increasing Quality Gate: Failed, OverOps detected incressing errors in the current build against the baseline of " + qualityReport.getInput().baselineTime;
+			return "Increasing Quality Gate: Failed, OverOps detected increasing errors in the current build against the baseline of " + qualityReport.getInput().baselineTime;
 		} else if (getPassedRegressedEvents()) {
 			return "Increasing Quality Gate: Passed, OverOps did not detect any increasing errors in the current build against the baseline of " + qualityReport.getInput().baselineTime;
 		}
