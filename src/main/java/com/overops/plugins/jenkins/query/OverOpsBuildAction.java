@@ -11,6 +11,7 @@ import hudson.model.Run;
 public class OverOpsBuildAction implements Action {
 	
 	private static final String ISSUE = "Issue";
+	private static final String STRING_FORMAT = "%,d";
 	
 	private final Run<?, ?> build;
 	private final QualityReport qualityReport;
@@ -46,7 +47,7 @@ public class OverOpsBuildAction implements Action {
 	public String getSummary() {
 		if (getUnstable() && getMarkedUnstable()) {
 			//the build is unstable when marking the build as unstable
-			return "OverOps has marked build "+ getDeploymentName() + "  as unstable because the below quality gate(s) were not met.";
+			return "OverOps has marked build "+ getDeploymentName() + " as unstable.";
 		} else if (!getMarkedUnstable() && getUnstable()) {
 			//unstable build stable when NOT marking the build as unstable
 			return "OverOps has detected issues with build "+ getDeploymentName() + "  but did not mark the build as unstable.";
@@ -77,7 +78,15 @@ public class OverOpsBuildAction implements Action {
 	
 	public String getNewErrorSummary() {
 		if (getNewEvents() != null && getNewEvents().size() > 0) {
-			return "New Error Gate: Failed, OverOps detected " + qualityReport.getNewIssues().size() + " new error(s) in your build.";
+			int count = qualityReport.getNewIssues().size();
+			StringBuilder sb = new StringBuilder("New Error Gate: Failed, OverOps detected ");
+			sb.append(count);
+			sb.append(" new error");
+			if (count != 1) {
+				sb.append("s");
+			}
+			sb.append(" in your build.");
+			return sb.toString();
 		} else if (qualityReport.isCheckNewGate()) {
 			return "New Error Gate: Passed, OverOps did not detect any new errors in your build.";
 		}
@@ -253,4 +262,29 @@ public class OverOpsBuildAction implements Action {
 	public Run<?, ?> getBuild() {
 		return build;
 	}
+
+	public String getNewGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getNewIssues().size());
+	}
+
+	public String getResurfacedGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getResurfacedErrors().size());
+	}
+
+	public String getCriticalGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getCriticalErrors().size());
+	}
+
+	public String getTotalGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getEventVolume());
+	}
+
+	public String getUniqueGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getUniqueEventsCount());
+	}
+
+	public String getRegressionGateTotal() {
+		return String.format(STRING_FORMAT, qualityReport.getRegressions() != null ? qualityReport.getRegressions().size() : 0);
+	}
+
 }
