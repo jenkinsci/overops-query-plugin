@@ -516,29 +516,40 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		//validate inputs first
 		validateInputs(printStream);
 
-		RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
-		
-		if ((printStream != null) && (debug)) {
-			apiClient.addObserver(new ApiClientObserver(printStream, debug));
-		}
-		
-		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
-	
-		if (allEventsView == null) {
-			throw new IllegalStateException(
-					"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
-		}
-		
-		RegressionInput input = setupRegressionData(run, allEventsView, listener, printStream);
-		
-		QualityReport report = ReportBuilder.execute(apiClient, input, maxErrorVolume, maxUniqueErrors,
-				printTopIssues, regexFilter, newEvents, resurfacedErrors, runRegressions, markUnstable, printStream, debug);
+		try {
+			RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 
-		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
-		run.addAction(buildAction);
+			if ((printStream != null) && (debug)) {
+				apiClient.addObserver(new ApiClientObserver(printStream, debug));
+			}
 
-		if ((markUnstable) && (report.getUnstable())) {
-			run.setResult(Result.UNSTABLE);
+			SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
+
+			if (allEventsView == null) {
+				throw new IllegalStateException(
+						"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
+			}
+
+			RegressionInput input = setupRegressionData(run, allEventsView, listener, printStream);
+
+			QualityReport report = ReportBuilder.execute(apiClient, input, maxErrorVolume, maxUniqueErrors,
+					printTopIssues, regexFilter, newEvents, resurfacedErrors, runRegressions, markUnstable, printStream, debug);
+
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
+			run.addAction(buildAction);
+
+			if ((markUnstable) && (report.getUnstable())) {
+				run.setResult(Result.UNSTABLE);
+			}
+
+		} catch (Exception ex) {
+			// show exception in the UI
+
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(ex, run);
+			run.addAction(buildAction);
+
+			// mark build "not built"
+			run.setResult(Result.NOT_BUILT);
 		}
 	}
 

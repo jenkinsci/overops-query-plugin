@@ -72,6 +72,10 @@
         background-color: hsl(10, 75.0%, 96.9%);
         border-color: hsl(7, 65.9%, 82.7%);
       }
+      .overops-quality-report .alert-muted {
+        background-color: #f5f5f5;
+        border-color: #ccc;
+      }
       .overops-quality-report [class^=icon-] {
         display: inline-block;
         height: 24px;
@@ -92,6 +96,9 @@
       }
       .overops-quality-report .icon-danger {
         background-image: url("${resURL}/plugin/overops-query/images/icon-danger.svg");
+      }
+      .overops-quality-report .icon-question {
+        background-image: url("${resURL}/plugin/overops-query/images/icon-question.svg");
       }
       .overops-quality-report .table {
         border-collapse: collapse;
@@ -120,6 +127,13 @@
       .overops-quality-report .muted {
         color: hsl(0, 0%, 60%);
       }
+      .overops-quality-report hr {
+        margin: 16px 0;
+      }
+      .overops-quality-report code {
+        font-weight: 700;
+        display: inline-block;
+      }
     </style>
     <l:main-panel>
       <section class="overops-quality-report">
@@ -130,267 +144,295 @@
         </div>
 
         <j:choose>
-          <j:when test="${it.markedUnstable}">
-            <j:choose>
-              <j:when test="${it.unstable}">
-                <div class="alert alert-danger d-flex align-center">
-                  <i class="icon-danger icon-lg mx-1"></i>
-                  ${it.summary}
-                </div>
-              </j:when>
-              <j:otherwise>
-                <div class="alert alert-success d-flex align-center">
-                  <i class="icon-success icon-lg mx-1"></i>
-                  ${it.summary}
-                </div>
-              </j:otherwise>
-            </j:choose>
+          <j:when test="${it.hasException}">
+            <div class="alert alert-muted d-flex align-center">
+              <i class="icon-question icon-lg mx-1"></i>
+              OverOps was unable to generate a Quality Report.
+            </div>
+            <div class="d-flex align-center mb-2 mt-4">
+              <i class="icon-question mr-1"></i>
+              <h4>An error occurred while generating a Quality Report.</h4>
+            </div>
+            <hr/>
+            <code class="mb-2">${it.exceptionMessage}</code>
+            <pre class="muted mb-2">${it.stackTrace}</pre>
+            <hr/>
+            <p>
+              <a href="https://support.overops.com/" target="_blank" rel="nofollow">
+                Troubleshooting common errors →
+              </a>
+            </p>
+            <p>
+              <a href="mailto:support@overops.com?${it.exceptionEmailMessage}" target="_blank" rel="nofollow">
+                Contact OverOps Support →
+              </a>
+            </p>
           </j:when>
           <j:otherwise>
             <j:choose>
-              <j:when test="${it.unstable}">
-                <div class="alert alert-warning d-flex align-center">
-                  <i class="icon-warning icon-lg mx-1"></i>
-                  ${it.summary}
-                </div>
+              <j:when test="${it.markedUnstable}">
+                <j:choose>
+                  <j:when test="${it.unstable}">
+                    <div class="alert alert-danger d-flex align-center">
+                      <i class="icon-danger icon-lg mx-1"></i>
+                      ${it.summary}
+                    </div>
+                  </j:when>
+                  <j:otherwise>
+                    <div class="alert alert-success d-flex align-center">
+                      <i class="icon-success icon-lg mx-1"></i>
+                      ${it.summary}
+                    </div>
+                  </j:otherwise>
+                </j:choose>
               </j:when>
               <j:otherwise>
-                <div class="alert alert-success d-flex align-center">
-                  <i class="icon-success icon-lg mx-1"></i>
-                  ${it.summary}
-                </div>
+                <j:choose>
+                  <j:when test="${it.unstable}">
+                    <div class="alert alert-warning d-flex align-center">
+                      <i class="icon-warning icon-lg mx-1"></i>
+                      ${it.summary}
+                    </div>
+                  </j:when>
+                  <j:otherwise>
+                    <div class="alert alert-success d-flex align-center">
+                      <i class="icon-success icon-lg mx-1"></i>
+                      ${it.summary}
+                    </div>
+                  </j:otherwise>
+                </j:choose>
               </j:otherwise>
             </j:choose>
+
+            <j:if test="${it.checkNewEvents}">
+              <j:choose>
+                <j:when test="${it.passedNewErrorGate}">
+                  <div class="d-flex align-center mt-4">
+                    <i class="icon-success mr-1"></i>
+                    <h4>${it.newErrorSummary}</h4>
+                  </div>
+                  <p class="ml-2 muted">Nothing to report</p>
+                </j:when>
+                <j:otherwise>
+                  <div class="d-flex align-center mb-2 mt-4">
+                    <i class="icon-danger mr-1"></i>
+                    <h4>${it.newErrorSummary}</h4>
+                  </div>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Application(s)</th>
+                        <th>Introduced by</th>
+                        <th>Volume</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <j:forEach items="${it.newEvents}" var="k">
+                        <tr>
+                          <td>
+                            <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
+                          </td>
+                          <td>${k.applications}</td>
+                          <td>${k.introducedBy}</td>
+                          <td>${k.hits}</td>
+                        </tr>
+                      </j:forEach>
+                    </tbody>
+                  </table>
+                </j:otherwise>
+              </j:choose>
+            </j:if>
+
+            <j:if test="${it.checkResurfacedEvents}">
+              <j:choose>
+                <j:when test="${it.passedResurfacedErrorGate}">
+                  <div class="d-flex align-center mt-4">
+                    <i class="icon-success mr-1"></i>
+                    <h4>${it.resurfacedErrorSummary}</h4>
+                  </div>
+                  <p class="ml-2 muted">Nothing to report</p>
+                </j:when>
+                <j:otherwise>
+                  <div class="d-flex align-center mb-2 mt-4">
+                    <i class="icon-danger mr-1"></i>
+                    <h4>${it.resurfacedErrorSummary}</h4>
+                  </div>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Application(s)</th>
+                        <th>Introduced by</th>
+                        <th>Volume</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <j:forEach items="${it.resurfacedEvents}" var="k">
+                        <tr>
+                          <td>
+                            <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
+                          </td>
+                          <td>${k.applications}</td>
+                          <td>${k.introducedBy}</td>
+                          <td>${k.hits}</td>
+                        </tr>
+                      </j:forEach>
+                    </tbody>
+                  </table>
+                </j:otherwise>
+              </j:choose>
+            </j:if>
+
+            <j:if test="${it.checkTotalErrors || it.checkUniqueErrors}">
+                <j:if test="${it.checkTotalErrors}">
+                  <j:choose>
+                    <j:when test="${it.passedTotalErrorGate}">
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-success mr-1"></i>
+                        <h4>${it.totalErrorSummary}</h4>
+                      </div>
+                    </j:when>
+                    <j:otherwise>
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-danger mr-1"></i>
+                        <h4>${it.totalErrorSummary}</h4>
+                      </div>
+                    </j:otherwise>
+                  </j:choose>
+                </j:if>
+
+                <j:if test="${it.checkUniqueErrors}">
+                  <j:choose>
+                    <j:when test="${it.passedUniqueErrorGate}">
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-success mr-1"></i>
+                        <h4>${it.uniqueErrorSummary}</h4>
+                      </div>
+                    </j:when>
+                    <j:otherwise>
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-danger mr-1"></i>
+                        <h4>${it.uniqueErrorSummary}</h4>
+                      </div>
+                    </j:otherwise>
+                  </j:choose>
+                </j:if>
+
+                <j:choose>
+                  <j:when test="${it.hasTopErrors}">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Top Events Affecting Unique/Total Error Gates</th>
+                          <th>Application(s)</th>
+                          <th>Introduced by</th>
+                          <th>Volume</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <j:forEach items="${it.topEvents}" var="k">
+                          <tr>
+                            <td>
+                              <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
+                            </td>
+                            <td>${k.applications}</td>
+                            <td>${k.introducedBy}</td>
+                            <td>${k.hits}</td>
+                          </tr>
+                        </j:forEach>
+                      </tbody>
+                    </table>
+                  </j:when>
+                  <j:otherwise>
+                    <p class="ml-2 muted">Nothing to report</p>
+                  </j:otherwise>
+                </j:choose>
+            </j:if>
+
+            <j:if test="${it.checkCriticalErrors}">
+              <j:choose>
+                <j:when test="${it.passedCriticalErrorGate}">
+                  <div class="d-flex align-center mt-4">
+                    <i class="icon-success mr-1"></i>
+                    <h4>${it.criticalErrorSummary}</h4>
+                  </div>
+                  <p class="ml-2 muted">Nothing to report</p>
+                </j:when>
+                <j:otherwise>
+                  <div class="d-flex align-center mb-2 mt-4">
+                    <i class="icon-danger mr-1"></i>
+                    <h4>${it.criticalErrorSummary}</h4>
+                  </div>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Application(s)</th>
+                        <th>Introduced by</th>
+                        <th>Volume</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <j:forEach items="${it.criticalEvents}" var="k">
+                        <tr>
+                          <td>
+                            <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
+                          </td>
+                          <td>${k.applications}</td>
+                          <td>${k.introducedBy}</td>
+                          <td>${k.hits}</td>
+                        </tr>
+                      </j:forEach>
+                    </tbody>
+                  </table>
+                </j:otherwise>
+              </j:choose>
+            </j:if>
+
+            <j:if test="${it.checkRegressedErrors}">
+              <j:choose>
+                <j:when test="${it.passedRegressedEvents}">
+                  <div class="d-flex align-center mt-4">
+                    <i class="icon-success mr-1"></i>
+                    <h4>${it.regressionSumarry}</h4>
+                  </div>
+                  <p class="ml-2 muted">Nothing to report</p>
+                </j:when>
+                <j:otherwise>
+                  <div class="d-flex align-center mb-2 mt-4">
+                    <i class="icon-danger mr-1"></i>
+                    <h4>${it.regressionSumarry}</h4>
+                  </div>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Event</th>
+                        <th>Application(s)</th>
+                        <th>Introduced by</th>
+                        <th>Volume / Rate</th>
+                        <th>Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <j:forEach items="${it.regressedEvents}" var="i">
+                        <tr>
+                          <td>
+                            <a href="${i.ARCLink}" target="_blank">${i.eventSummary}</a>
+                          </td>
+                          <td>${i.applications}</td>
+                          <td>${i.introducedBy}</td>
+                          <td>${i.eventRate}</td>
+                          <td>${i.type}</td>
+                        </tr>
+                      </j:forEach>
+                    </tbody>
+                  </table>
+                </j:otherwise>
+              </j:choose>
+            </j:if>
           </j:otherwise>
         </j:choose>
-
-        <j:if test="${it.checkNewEvents}">
-          <j:choose>
-            <j:when test="${it.passedNewErrorGate}">
-              <div class="d-flex align-center mt-4">
-                <i class="icon-success mr-1"></i>
-                <h4>${it.newErrorSummary}</h4>
-              </div>
-              <p class="ml-2 muted">Nothing to report</p>
-            </j:when>
-            <j:otherwise>
-              <div class="d-flex align-center mb-2 mt-4">
-                <i class="icon-danger mr-1"></i>
-                <h4>${it.newErrorSummary}</h4>
-              </div>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Application(s)</th>
-                    <th>Introduced by</th>
-                    <th>Volume</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <j:forEach items="${it.newEvents}" var="k">
-                    <tr>
-                      <td>
-                        <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
-                      </td>
-                      <td>${k.applications}</td>
-                      <td>${k.introducedBy}</td>
-                      <td>${k.hits}</td>
-                    </tr>
-                  </j:forEach>
-                </tbody>
-              </table>
-            </j:otherwise>
-          </j:choose>
-        </j:if>
-
-        <j:if test="${it.checkResurfacedEvents}">
-          <j:choose>
-            <j:when test="${it.passedResurfacedErrorGate}">
-              <div class="d-flex align-center mt-4">
-                <i class="icon-success mr-1"></i>
-                <h4>${it.resurfacedErrorSummary}</h4>
-              </div>
-              <p class="ml-2 muted">Nothing to report</p>
-            </j:when>
-            <j:otherwise>
-              <div class="d-flex align-center mb-2 mt-4">
-                <i class="icon-danger mr-1"></i>
-                <h4>${it.resurfacedErrorSummary}</h4>
-              </div>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Application(s)</th>
-                    <th>Introduced by</th>
-                    <th>Volume</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <j:forEach items="${it.resurfacedEvents}" var="k">
-                    <tr>
-                      <td>
-                        <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
-                      </td>
-                      <td>${k.applications}</td>
-                      <td>${k.introducedBy}</td>
-                      <td>${k.hits}</td>
-                    </tr>
-                  </j:forEach>
-                </tbody>
-              </table>
-            </j:otherwise>
-          </j:choose>
-        </j:if>
-
-        <j:if test="${it.checkTotalErrors || it.checkUniqueErrors}">
-            <j:if test="${it.checkTotalErrors}">
-              <j:choose>
-                <j:when test="${it.passedTotalErrorGate}">
-                  <div class="d-flex align-center mt-4 mb-2">
-                    <i class="icon-success mr-1"></i>
-                    <h4>${it.totalErrorSummary}</h4>
-                  </div>
-                </j:when>
-                <j:otherwise>
-                  <div class="d-flex align-center mt-4 mb-2">
-                    <i class="icon-danger mr-1"></i>
-                    <h4>${it.totalErrorSummary}</h4>
-                  </div>
-                </j:otherwise>
-              </j:choose>
-            </j:if>
-
-            <j:if test="${it.checkUniqueErrors}">
-              <j:choose>
-                <j:when test="${it.passedUniqueErrorGate}">
-                  <div class="d-flex align-center mt-4 mb-2">
-                    <i class="icon-success mr-1"></i>
-                    <h4>${it.uniqueErrorSummary}</h4>
-                  </div>
-                </j:when>
-                <j:otherwise>
-                  <div class="d-flex align-center mt-4 mb-2">
-                    <i class="icon-danger mr-1"></i>
-                    <h4>${it.uniqueErrorSummary}</h4>
-                  </div>
-                </j:otherwise>
-              </j:choose>
-            </j:if>
-
-            <j:choose>
-              <j:when test="${it.hasTopErrors}">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Top Events Affecting Unique/Total Error Gates</th>
-                      <th>Application(s)</th>
-                      <th>Introduced by</th>
-                      <th>Volume</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <j:forEach items="${it.topEvents}" var="k">
-                      <tr>
-                        <td>
-                          <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
-                        </td>
-                        <td>${k.applications}</td>
-                        <td>${k.introducedBy}</td>
-                        <td>${k.hits}</td>
-                      </tr>
-                    </j:forEach>
-                  </tbody>
-                </table>
-              </j:when>
-              <j:otherwise>
-                <p class="ml-2 muted">Nothing to report</p>
-              </j:otherwise>
-            </j:choose>
-        </j:if>
-
-        <j:if test="${it.checkCriticalErrors}">
-          <j:choose>
-            <j:when test="${it.passedCriticalErrorGate}">
-              <div class="d-flex align-center mt-4">
-                <i class="icon-success mr-1"></i>
-                <h4>${it.criticalErrorSummary}</h4>
-              </div>
-              <p class="ml-2 muted">Nothing to report</p>
-            </j:when>
-            <j:otherwise>
-              <div class="d-flex align-center mb-2 mt-4">
-                <i class="icon-danger mr-1"></i>
-                <h4>${it.criticalErrorSummary}</h4>
-              </div>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Application(s)</th>
-                    <th>Introduced by</th>
-                    <th>Volume</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <j:forEach items="${it.criticalEvents}" var="k">
-                    <tr>
-                      <td>
-                        <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
-                      </td>
-                      <td>${k.applications}</td>
-                      <td>${k.introducedBy}</td>
-                      <td>${k.hits}</td>
-                    </tr>
-                  </j:forEach>
-                </tbody>
-              </table>
-            </j:otherwise>
-          </j:choose>
-        </j:if>
-
-        <j:if test="${it.checkRegressedErrors}">
-          <j:choose>
-            <j:when test="${it.passedRegressedEvents}">
-              <div class="d-flex align-center mt-4">
-                <i class="icon-success mr-1"></i>
-                <h4>${it.regressionSumarry}</h4>
-              </div>
-              <p class="ml-2 muted">Nothing to report</p>
-            </j:when>
-            <j:otherwise>
-              <div class="d-flex align-center mb-2 mt-4">
-                <i class="icon-danger mr-1"></i>
-                <h4>${it.regressionSumarry}</h4>
-              </div>
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>Event</th>
-                    <th>Application(s)</th>
-                    <th>Introduced by</th>
-                    <th>Volume / Rate</th>
-                    <th>Type</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <j:forEach items="${it.regressedEvents}" var="i">
-                    <tr>
-                      <td>
-                        <a href="${i.ARCLink}" target="_blank">${i.eventSummary}</a>
-                      </td>
-                      <td>${i.applications}</td>
-                      <td>${i.introducedBy}</td>
-                      <td>${i.eventRate}</td>
-                      <td>${i.type}</td>
-                    </tr>
-                  </j:forEach>
-                </tbody>
-              </table>
-            </j:otherwise>
-          </j:choose>
-        </j:if>
       </section>
     </l:main-panel>
   </l:layout>
