@@ -1,5 +1,10 @@
 package com.overops.plugins.jenkins.query;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.overops.plugins.jenkins.query.ReportBuilder.QualityReport;
@@ -15,10 +20,19 @@ public class OverOpsBuildAction implements Action {
 	
 	private final Run<?, ?> build;
 	private final QualityReport qualityReport;
+	private final Exception exception;
 
 	OverOpsBuildAction(QualityReport qualityReport, Run<?, ?> build) {
 		this.qualityReport = qualityReport;
 		this.build = build;
+		this.exception = null;
+	}
+
+	// For API failures
+	OverOpsBuildAction(Exception exception, Run<?, ?> build) {
+		this.qualityReport = null;
+		this.build = build;
+		this.exception = exception;
 	}
 
 	@Override
@@ -287,4 +301,37 @@ public class OverOpsBuildAction implements Action {
 		return String.format(STRING_FORMAT, qualityReport.getRegressions() != null ? qualityReport.getRegressions().size() : 0);
 	}
 
+	public boolean getHasException() {
+		return exception != null;
+	}
+
+	public String getExceptionMessage() {
+		return exception != null ? exception.getMessage() : "";
+	}
+
+	public String getStackTrace() {
+		if (exception == null) return "";
+
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+
+		exception.printStackTrace(pw);
+
+		return sw.toString(); // stack trace as a string
+	}
+
+	public String getExceptionEmailMessage() {
+		if (exception == null) return "";
+
+		StringBuilder emailMessage = new StringBuilder("subject=CI%2FCD%20plugin%20error");
+
+		try {
+			emailMessage.append("&body=");
+			emailMessage.append(URLEncoder.encode(getExceptionMessage() + "\n\n" + getStackTrace(), StandardCharsets.UTF_8.toString()));
+		} catch (UnsupportedEncodingException ex) {
+			// unable to encode email body
+		}
+
+		return emailMessage.toString();
+	}
 }
