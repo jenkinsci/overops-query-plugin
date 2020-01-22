@@ -113,7 +113,7 @@
         background-image: url("${resURL}/plugin/overops-query/images/icon-danger.svg");
       }
       .overops-quality-report .icon-times {
-        background-image: url("{$resURL/plugin/overops-query/images/icon-times.svg");
+        background-image: url("${resURL}/plugin/overops-query/images/icon-times.svg");
       }
       .overops-quality-report .icon-question {
         background-image: url("${resURL}/plugin/overops-query/images/icon-question.svg");
