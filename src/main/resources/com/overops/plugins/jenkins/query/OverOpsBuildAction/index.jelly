@@ -154,6 +154,11 @@
       }
       .overops-quality-report ul.unstyled {
         list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .overops-quality-report ul.unstyled > li {
+        margin: .5em 0;
       }
     </style>
     <l:main-panel>
@@ -174,10 +179,6 @@
               <i class="icon-question mr-1"></i>
               <h4>An error occurred while generating a Quality Report.</h4>
             </div>
-            <hr/>
-            <code class="mb-2">${it.exceptionMessage}</code>
-            <pre class="muted mb-2">${it.stackTrace}</pre>
-            <hr/>
             <ul class="unstyled">
               <li>
                 <a href="https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations" target="_blank" rel="nofollow">
@@ -195,6 +196,10 @@
                 </a>
               </li>
             </ul>
+            <hr/>
+            <code class="mb-2">${it.exceptionMessage}</code>
+            <pre class="muted mb-2">${it.stackTrace}</pre>
+            <hr/>
           </j:when>
           <j:otherwise>
             <j:choose>
