@@ -113,7 +113,7 @@
         background-image: url("${resURL}/plugin/overops-query/images/icon-danger.svg");
       }
       .overops-quality-report .icon-times {
-        background-image: url("${resURL/plugin/overops-query/images/icon-times.svg");
+        background-image: url("${resURL}/plugin/overops-query/images/icon-times.svg");
       }
       .overops-quality-report .icon-question {
         background-image: url("${resURL}/plugin/overops-query/images/icon-question.svg");
@@ -152,6 +152,9 @@
         font-weight: 700;
         display: inline-block;
       }
+      .overops-quality-report ul.unstyled {
+        list-style: none;
+      }
     </style>
     <l:main-panel>
       <section class="overops-quality-report">
@@ -175,16 +178,23 @@
             <code class="mb-2">${it.exceptionMessage}</code>
             <pre class="muted mb-2">${it.stackTrace}</pre>
             <hr/>
-            <p>
-              <a href="https://support.overops.com/" target="_blank" rel="nofollow">
-                Troubleshooting common errors →
-              </a>
-            </p>
-            <p>
-              <a href="mailto:support@overops.com?${it.exceptionEmailMessage}" target="_blank" rel="nofollow">
-                Contact OverOps Support →
-              </a>
-            </p>
+            <ul class="unstyled">
+              <li>
+                <a href="https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations" target="_blank" rel="nofollow">
+                  Best practices for short lived applications →
+                </a>
+              </li>
+              <li>
+                <a href="https://support.overops.com/" target="_blank" rel="nofollow">
+                  OverOps Support Portal →
+                </a>
+              </li>
+              <li>
+                <a href="mailto:support@overops.com?${it.exceptionEmailMessage}" target="_blank" rel="nofollow">
+                  Contact OverOps Support →
+                </a>
+              </li>
+            </ul>
           </j:when>
           <j:otherwise>
             <j:choose>
