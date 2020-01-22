@@ -152,6 +152,14 @@
         font-weight: 700;
         display: inline-block;
       }
+      .overops-quality-report ul.unstyled {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .overops-quality-report ul.unstyled > li {
+        margin: .5em 0;
+      }
     </style>
     <l:main-panel>
       <section class="overops-quality-report">
@@ -171,20 +179,27 @@
               <i class="icon-question mr-1"></i>
               <h4>An error occurred while generating a Quality Report.</h4>
             </div>
+            <ul class="unstyled">
+              <li>
+                <a href="https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations" target="_blank" rel="nofollow">
+                  Best practices for short lived applications →
+                </a>
+              </li>
+              <li>
+                <a href="https://support.overops.com/" target="_blank" rel="nofollow">
+                  OverOps Support Portal →
+                </a>
+              </li>
+              <li>
+                <a href="mailto:support@overops.com?${it.exceptionEmailMessage}" target="_blank" rel="nofollow">
+                  Contact OverOps Support →
+                </a>
+              </li>
+            </ul>
             <hr/>
             <code class="mb-2">${it.exceptionMessage}</code>
             <pre class="muted mb-2">${it.stackTrace}</pre>
             <hr/>
-            <p>
-              <a href="https://support.overops.com/" target="_blank" rel="nofollow">
-                Troubleshooting common errors →
-              </a>
-            </p>
-            <p>
-              <a href="mailto:support@overops.com?${it.exceptionEmailMessage}" target="_blank" rel="nofollow">
-                Contact OverOps Support →
-              </a>
-            </p>
           </j:when>
           <j:otherwise>
             <j:choose>
