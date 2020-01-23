@@ -523,6 +523,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			printStream = null;
 		}
 		
+		//check to see if anything prior has failed and if so, skip the OverOps Quality Check
+		if (run.getResult() != null && run.getResult().isWorseThan(Result.UNSTABLE)) {
+			printStream.println("Skipping OverOps Report due to prior build failure");
+			return;
+		}
+		
 		pauseForTheCause(printStream);
 		
 		//validate inputs first
