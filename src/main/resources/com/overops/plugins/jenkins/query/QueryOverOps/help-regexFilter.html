@@ -1,6 +1,9 @@
 <div>
 	A way to filter out specific event types from affecting the outcome of the OverOps Reliability report. 
-Sample list of event types, Uncaught Exception, Caught Exception, Swallowed Exception, Logged Error, Logged Warning, Timer
-This filter enables the removal of one or more of these event types from the final results.
-<p>Example filter expression with pipe separated list - "type":\"s*(Logged Error|Logged Warning|Timer)
+	Event types include: <em>Uncaught Exception, Caught Exception, Swallowed Exception, Logged Error, 
+	Logged Warning, Timer</em>. This filter enables the removal of one or more of these event types from 
+	the final results.
+	<p>
+		Example filter expression with pipe separated list: <code>"type":"s*(Logged Error|Logged Warning|Timer)"</code>
+	</p>
 </div>
