@@ -256,7 +256,7 @@
                           <a href="#new-gate">New</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.newGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
@@ -280,7 +280,7 @@
                           <a href="#resurfaced-gate">Resurfaced</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.resurfacedGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
@@ -304,7 +304,7 @@
                           <a href="#total-gate">Total</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.totalGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
@@ -328,7 +328,7 @@
                           <a href="#unique-gate">Unique</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.uniqueGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
@@ -352,7 +352,7 @@
                           <a href="#critical-gate">Critical</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.criticalGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
@@ -376,7 +376,7 @@
                           <a href="#increasing-gate">Increasing</a>
                         </td>
                         <td>Passed</td>
-                        <td>–</td>
+                        <td>${it.regressionGateTotal}</td>
                       </tr>
                     </j:when>
                     <j:otherwise>
