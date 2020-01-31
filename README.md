@@ -293,7 +293,7 @@ Starting in v2, all parameters are optional. You may remove any parameters from 
 
 If previous build steps were not successful, the plugin will not run or attempt to generate a Quality Report.
 
-If the plugin is not able to generate a Quality Report, the build will be marked **Not Built** by default or **Success** if [Mark build successful if unable to generate a Quality Report](#mark-build-successful-if-unable-to-generate-a-quality-report) is checked.
+If the plugin runs but is not able to generate a Quality Report, the build will be marked **Not Built** by default or **Success** if [Mark build successful if unable to generate a Quality Report](#mark-build-successful-if-unable-to-generate-a-quality-report) is checked.
 
 ![configure system](readme/error-report.png)
 
