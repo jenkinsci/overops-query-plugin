@@ -1,5 +1,11 @@
 # OverOps Reliability Report - Jenkins Plugin
 
+- [Installation](#installation)
+- [Global Configuration](#global-configuration)
+- [Job Post Build Configuration](#job-post-build-configuration)
+- [Pipeline](#pipeline)
+- [Troubleshooting](#troubleshooting)
+
 This plugin provides a mechanism for applying OverOps severity assignment and regression analysis to new builds to allow application owners, DevOps engineers, and SREs to determine the quality of their code before promoting it into production.
 
 Run this plugin as a post build step after all other testing is complete to generate a Reliability Report that will determine the stability of the build. From the Reliability Report you can drill down into each specific error using the OverOps [Automated Root Cause](https://doc.overops.com/docs/automated-root-cause-arc) analysis screen to solve the issue.
@@ -174,16 +180,6 @@ If checked, all queries and results will be displayed in the OverOps reliability
 
 If checked, the build will be marked **Success** if unable to generate a Quality Report. By default, the build will be marked **Not Built** if unable to generate a Quality Report.
 
-## Troubleshooting
-
-If previous build steps were not successful, the plugin will not run or attempt to generate a Quality Report.
-
-If the plugin is not able to generate a Quality Report, the build will be marked **Not Built** by default or **Success** if [Mark build successful if unable to generate a Quality Report](#mark-build-successful-if-unable-to-generate-a-quality-report) is checked.
-
-![configure system](readme/error-report.png)
-
-For short-lived applications, [we recommend](https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations) using the ```-Dtakipi.shutdown.gracetime=20000``` agent property.
-
 ## Pipeline
 
 This plugin is compatible with Jenkins Pipeline.
@@ -231,7 +227,7 @@ stage('OverOps') {
       applySeasonality: true,
 
       // debug mode
-      debug: false
+      debug: false,
 
       // if true, mark build SUCCESS if unable to generate report
       // if false, mark build NOT_BUILT if unable to generate report
@@ -288,7 +284,17 @@ Starting in v2, all parameters are optional. You may remove any parameters from 
 |---|-----|-----|---|
 |`activeTimespan`|`10080`|`'7d'`| Now a String |
 |`baselineTimespan`|`720`|`'12h'`| Now a String |
-|`verbose`|`false`| |Replaced by `debug`|
+|`verbose`|`false`| | Replaced by `debug`|
 |`debug`| |`false`|Previously `verbose`|
-|`serverWait`|`60`| | Removed
-|`showResults`|`true`| | Removed
+|`serverWait`|`60`| | Removed |
+|`showResults`|`true`| | Removed |
+
+## Troubleshooting
+
+If previous build steps were not successful, the plugin will not run or attempt to generate a Quality Report.
+
+If the plugin is not able to generate a Quality Report, the build will be marked **Not Built** by default or **Success** if [Mark build successful if unable to generate a Quality Report](#mark-build-successful-if-unable-to-generate-a-quality-report) is checked.
+
+![configure system](readme/error-report.png)
+
+For short-lived applications, [we recommend](https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations) using the ```-Dtakipi.shutdown.gracetime=20000``` agent property.
