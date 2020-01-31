@@ -7,3 +7,5 @@
 *.iml
 /bin/
 .DS_Store
+.factorypath
+.vscode/

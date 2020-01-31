@@ -327,7 +327,7 @@ public class ReportBuilder {
 			regressions = getAllRegressions(apiClient, input, rateRegression, reportVolume.filter);
 			if (regressions != null && regressions.size() > 0) {
 				hasRegressions = true;
-				replaceSourceId2(regressions);
+				replaceSourceId(regressions);
 			}
 		}
 		
@@ -389,36 +389,19 @@ public class ReportBuilder {
 				qualityGateReport.getUniqueErrorCount(), unstable, newEvents, resurfacedEvents, checkCritical, checkMaxEventGate,
 				checkUniqueEventGate, runRegressions, maxEventVolume, maxUniqueErrors, markedUnstable);
 	}
-	
-	//for each event, replace the source ID in the ARC link with the number 4 (which means Jenkins)
-	private static void replaceSourceId (List<OOReportEvent> events) {
-		for (OOReportEvent ooReportEvent : events) {
-			String arcLink = replaceSourceIdInArcLink(ooReportEvent.getARCLink());
-			ooReportEvent.setArcLink(arcLink);
+
+	// for each event, replace the source ID in the ARC link with the number 4 (which means Jenkins)
+	// see: https://overopshq.atlassian.net/wiki/spaces/PP/pages/1529872385/Hit+Sources
+	private static void replaceSourceId (List<? extends OOReportEvent> events) {
+		String match = "&source=(\\d)+"; // matches at least one digit
+		String replace = "&source=4";    // replace with 4
+
+		for (OOReportEvent event : events) {
+			String arcLink = event.getARCLink().replaceAll(match, replace);
+			event.setArcLink(arcLink);
 		}
 	}
-	
-	//for each event, replace the source ID in the ARC link with the number 4 (which means Jenkins)
-	private static void replaceSourceId2 (List<OOReportRegressedEvent> events) {
-		for (OOReportEvent ooReportEvent : events) {
-			String arcLink = replaceSourceIdInArcLink(ooReportEvent.getARCLink());
-			ooReportEvent.setArcLink(arcLink);
-		}
-	}
-	
-	private static String replaceSourceIdInArcLink(String arcLink) {
-		if (arcLink == null) {
-			return arcLink;
-		}
-		String returnString;
-		CharSequence target = "source=44";
-		CharSequence replacement = "source=4";
-				
-		returnString = arcLink.replace(target, replacement);
-		
-		return returnString;	
-	}
-		
+
 	private static List<OOReportRegressedEvent> getAllRegressions(ApiClient apiClient, 
 			RegressionInput input, RateRegression rateRegression, Collection<EventResult> filter) {
 
