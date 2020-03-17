@@ -474,7 +474,7 @@
               </j:choose>
             </j:if>
 
-            <j:if test="${it.checkTotalErrors || it.checkUniqueErrors}">
+           <j:if test="${it.checkTotalErrors || it.checkUniqueErrors}">
                 <j:if test="${it.checkTotalErrors}">
                   <j:choose>
                     <j:when test="${it.passedTotalErrorGate}">
@@ -489,32 +489,14 @@
                         <h4 id="total-gate">${it.totalErrorSummary}</h4>
                       </div>
                     </j:otherwise>
-                  </j:choose>
-                </j:if>
-
-                <j:if test="${it.checkUniqueErrors}">
-                  <j:choose>
-                    <j:when test="${it.passedUniqueErrorGate}">
-                      <div class="d-flex align-center mt-4 mb-2">
-                        <i class="icon-success mr-1"></i>
-                        <h4 id="unique-gate">${it.uniqueErrorSummary}</h4>
-                      </div>
-                    </j:when>
-                    <j:otherwise>
-                      <div class="d-flex align-center mt-4 mb-2">
-                        <i class="icon-danger mr-1"></i>
-                        <h4 id="unique-gate">${it.uniqueErrorSummary}</h4>
-                      </div>
-                    </j:otherwise>
-                  </j:choose>
-                </j:if>
-
+                  </j:choose>       
+                
                 <j:choose>
                   <j:when test="${it.hasTopErrors}">
                     <table class="table table-striped">
                       <thead>
                         <tr>
-                          <th>Top Events Affecting Unique/Total Error Gates</th>
+                          <th>Top Events Affecting Total Error Gates</th>
                           <th>Application(s)</th>
                           <th>Introduced by</th>
                           <th>Volume</th>
@@ -540,6 +522,54 @@
                 </j:choose>
             </j:if>
 
+                <j:if test="${it.checkUniqueErrors}">
+                  <j:choose>
+                    <j:when test="${it.passedUniqueErrorGate}">
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-success mr-1"></i>
+                        <h4 id="unique-gate">${it.uniqueErrorSummary}</h4>
+                      </div>
+                    </j:when>
+                    <j:otherwise>
+                      <div class="d-flex align-center mt-4 mb-2">
+                        <i class="icon-danger mr-1"></i>
+                        <h4 id="unique-gate">${it.uniqueErrorSummary}</h4>
+                      </div>
+                    </j:otherwise>
+                  </j:choose>
+
+                <j:choose>
+                  <j:when test="${it.hasTopErrors}">
+                    <table class="table table-striped">
+                      <thead>
+                        <tr>
+                          <th>Top Events Affecting Unique Error Gates</th>
+                          <th>Application(s)</th>
+                          <th>Introduced by</th>
+                          <th>Volume</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <j:forEach items="${it.topEvents}" var="k">
+                          <tr>
+                            <td>
+                              <a href="${k.ARCLink}" target="_blank">${k.eventSummary}</a>
+                            </td>
+                            <td>${k.applications}</td>
+                            <td>${k.introducedBy}</td>
+                            <td>${k.hits}</td>
+                          </tr>
+                        </j:forEach>
+                      </tbody>
+                    </table>
+                  </j:when>
+                  <j:otherwise>
+                    <p class="ml-2 muted">Nothing to report</p>
+                  </j:otherwise>
+                </j:choose>
+                 </j:if>
+            </j:if>
+            
             <j:if test="${it.checkCriticalErrors}">
               <j:choose>
                 <j:when test="${it.passedCriticalErrorGate}">
