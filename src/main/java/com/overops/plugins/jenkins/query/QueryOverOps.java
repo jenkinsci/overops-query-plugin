@@ -92,8 +92,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private Double criticalRegressionDelta;
 	private boolean applySeasonality;
 
-	//Debugging Options
+	// Advanced Options
 	private boolean debug;
+	private boolean errorSuccess;
 
 	// all settings are optional
 	@DataBoundConstructor
@@ -131,6 +132,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.criticalRegressionDelta = 0d;
 
 		this.debug = false;
+		this.errorSuccess = false;
 	}
 
 	// deprecated for improved Pipeline integration - see: https://jenkins.io/doc/developer/plugin-development/pipeline-integration/#constructor-vs-setters
@@ -140,7 +142,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			JSONObject checkVolumeErrors, Integer maxErrorVolume, JSONObject checkUniqueErrors, 
 			Integer maxUniqueErrors, JSONObject checkCriticalErrors, String criticalExceptionTypes, JSONObject checkRegressionErrors, String activeTimespan, 
 			String baselineTimespan, Double minErrorRateThreshold, Integer minVolumeThreshold, boolean applySeasonality, Double regressionDelta, Double criticalRegressionDelta,
-			boolean debug) {
+			boolean debug, boolean errorSuccess) {
 
 		setApplicationName(applicationName);
 		setDeploymentName(deploymentName);
@@ -160,6 +162,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		setCheckRegressionErrors(checkRegressionErrors);
 
 		setDebug(debug);
+		setErrorSuccess(errorSuccess);
 	}
 
 	// getters() needed for config.jelly and Pipeline
@@ -208,6 +211,15 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	@DataBoundSetter
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	public boolean getErrorSuccess() {
+		return errorSuccess;
+	}
+
+	@DataBoundSetter
+	public void setErrorSuccess(boolean errorSuccess) {
+		this.errorSuccess = errorSuccess;
 	}
 
 	public JSONObject getCheckNewErrors() {
@@ -511,34 +523,56 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			printStream = null;
 		}
 		
+		//check to see if anything prior has failed and if so, skip the OverOps Quality Check
+		Result result = run.getResult();
+		if (result != null && result.isWorseThan(Result.UNSTABLE)) {
+			printStream.println("Skipping OverOps Report due to prior build failure");
+			return;
+		}
+		
 		pauseForTheCause(printStream);
 		
 		//validate inputs first
 		validateInputs(printStream);
 
-		RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
-		
-		if ((printStream != null) && (debug)) {
-			apiClient.addObserver(new ApiClientObserver(printStream, debug));
-		}
-		
-		SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
-	
-		if (allEventsView == null) {
-			throw new IllegalStateException(
-					"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
-		}
-		
-		RegressionInput input = setupRegressionData(run, allEventsView, listener, printStream);
-		
-		QualityReport report = ReportBuilder.execute(apiClient, input, maxErrorVolume, maxUniqueErrors,
-				printTopIssues, regexFilter, newEvents, resurfacedErrors, runRegressions, markUnstable, printStream, debug);
+		try {
+			RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 
-		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
-		run.addAction(buildAction);
+			if ((printStream != null) && (debug)) {
+				apiClient.addObserver(new ApiClientObserver(printStream, debug));
+			}
 
-		if ((markUnstable) && (report.getUnstable())) {
-			run.setResult(Result.UNSTABLE);
+			SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
+
+			if (allEventsView == null) {
+				throw new IllegalStateException(
+						"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
+			}
+
+			RegressionInput input = setupRegressionData(run, allEventsView, listener, printStream);
+
+			QualityReport report = ReportBuilder.execute(apiClient, input, maxErrorVolume, maxUniqueErrors,
+					printTopIssues, regexFilter, newEvents, resurfacedErrors, runRegressions, markUnstable, printStream, debug);
+
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
+			run.addAction(buildAction);
+
+			if ((markUnstable) && (report.getUnstable())) {
+				run.setResult(Result.UNSTABLE);
+			}
+
+		} catch (Exception ex) {
+			// show exception in the UI
+
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(ex, run);
+			run.addAction(buildAction);
+
+			// mark build "not built" (or "success", set in advanced settings)
+			if (errorSuccess) {
+				run.setResult(Result.SUCCESS);
+			} else {
+				run.setResult(Result.NOT_BUILT);
+			}
 		}
 	}
 

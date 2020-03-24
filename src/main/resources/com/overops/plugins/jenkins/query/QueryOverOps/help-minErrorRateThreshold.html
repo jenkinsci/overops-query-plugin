@@ -1,7 +1,19 @@
 <div>
-The minimum rate at which event of a non-critical type (e.g. uncaught) must take place to be considered severe. A rate of 0.1 means the events is allowed to take place <= 10% of the time.
-<blockquote>- If a New event has a rate greater than the set value, it will be evaluated as severe and could break the build if its event volume is above the Event Volume Threshold.</blockquote>
-<blockquote>- If an Existing event has a rate greater than the set value, it will be evaluated as severe and could break the build if its event volume is above the Event Volume Threshold and the Critical Regression Threshold.</blockquote>
-<blockquote>- If an event has a rate less than the set value, it will not be evaluated as severe and will not break the build.</blockquote>
-
+	The minimum rate at which event of a non-critical type (e.g. uncaught) must take place to be 
+	considered severe. A rate of 0.1 means the events is allowed to take place &lt;= 10% of the time.
+	<ul>
+		<li>
+			If a New event has a rate greater than the set value, it will be evaluated as severe and could 
+			break the build if its event volume is above the Event Volume Threshold.
+		</li>
+		<li>
+			If an Existing event has a rate greater than the set value, it will be evaluated as severe and 
+			could break the build if its event volume is above the Event Volume Threshold and the Critical 
+			Regression Threshold.
+		</li>
+		<li>
+			If an event has a rate less than the set value, it will not be evaluated as severe and will not
+			break the build.
+		</li>
+	</ul>
 </div>

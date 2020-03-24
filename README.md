@@ -1,12 +1,18 @@
 # OverOps Reliability Report - Jenkins Plugin
 
+- [Installation](#installation)
+- [Global Configuration](#global-configuration)
+- [Job Post Build Configuration](#job-post-build-configuration)
+- [Pipeline](#pipeline)
+- [Troubleshooting](#troubleshooting)
+
 This plugin provides a mechanism for applying OverOps severity assignment and regression analysis to new builds to allow application owners, DevOps engineers, and SREs to determine the quality of their code before promoting it into production.
 
 Run this plugin as a post build step after all other testing is complete to generate a Reliability Report that will determine the stability of the build. From the Reliability Report you can drill down into each specific error using the OverOps [Automated Root Cause](https://doc.overops.com/docs/automated-root-cause-arc) analysis screen to solve the issue.
 
-For more information about the plugin, [quality gates](https://doc.overops.com/docs/jenkins#section-quality-gates), and for [regression testing examples](https://doc.overops.com/docs/jenkins#section-examples-for-regression-testing), see the [Jenkins Plugin Guide](https://doc.overops.com/docs/jenkins).
+For more information about this plugin and [quality gates](https://doc.overops.com/docs/overops-quality-gates), see the [OverOps CI/CD Pipeline Integrations guide](https://doc.overops.com/docs/cicd-pipeline).
 
-![OverOps Reliability Report](https://files.readme.io/865d290-Pasted_image_at_2019-02-11__6_21_PM.png)
+![OverOps Reliability Report](readme/quality-report.png)
 
 ## Installation
 
@@ -29,11 +35,11 @@ scroll down to **OverOps Query Plugin**.
 
 ### OverOps URL
 
-The complete URL of the OverOps API, including port. https://api.overops.com for SaaS or http://host.domain.com:8080 for on prem.
+The complete URL of the OverOps API, including protocol and port. (e.g. https://api.overops.com for SaaS or http://host.domain.com:8080 for on prem).
 
 ### OverOps Environment ID
 
-The default OverOps environment identifier (e.g. S12345) if none is specified in the build settings. Make sure the "S" is capitalized.
+The default OverOps environment identifier (e.g. S12345) if none is specified in the build settings.
 
 ### OverOps API Token
 
@@ -47,7 +53,7 @@ Click *Test Connection* to show a count of available metrics. If the count shows
 
 Choose a project, then select Configure &rarr; Post-build Actions &rarr; scroll down to **Query OverOps**
 
-![code quality gate options](https://files.readme.io/be5ad3f-image-7.png)
+![code quality gate options](readme/code-quality-gate-options.png)
 
 ### Application Name
 
@@ -79,7 +85,7 @@ A way to filter out specific event types from affecting the outcome of the OverO
 
 * Sample list of event types, Uncaught Exception, Caught Exception,|Swallowed Exception, Logged Error, Logged Warning, Timer
 * This filter enables the removal of one or more of these event types from the final results.
-* Example filter expression with pipe separated list- ```"type":\"s*(Logged Error|Logged Warning|Timer)```
+* Example filter expression with pipe separated list- ```"type":"s*(Logged Error|Logged Warning|Timer)"```
 
 ### Mark Build Unstable
 
@@ -110,7 +116,7 @@ Set the max unique error volume allowed. If exceeded the build will be marked as
 A comma delimited list of exception types that are deemed as severe regardless of their volume. If any events of any exceptions listed have a count greater than zero, the build will be marked as unstable.
 
 **Example:**  
-NullPointerException,IndexOutOfBoundsException
+```NullPointerException,IndexOutOfBoundsException```
 
 ### Increasing Errors Gate
 
@@ -168,7 +174,11 @@ If peaks have been seen in baseline window, then this would be considered normal
 
 ### Debug Mode
 
-If checked, all queries and results will be displayed in the OverOps reliability report. For debugging purposes only.
+If checked, all queries and results will be displayed in the OverOps reliability report. *For debugging purposes only*.
+
+### Mark build successful if unable to generate a Quality Report
+
+If checked, the build will be marked **Success** if unable to generate a Quality Report. By default, the build will be marked **Not Built** if unable to generate a Quality Report.
 
 ## Pipeline
 
@@ -217,7 +227,11 @@ stage('OverOps') {
       applySeasonality: true,
 
       // debug mode
-      debug: false
+      debug: false,
+
+      // if true, mark build SUCCESS if unable to generate report
+      // if false, mark build NOT_BUILT if unable to generate report
+      errorSuccess: false
     )
     echo "OverOps Reliability Report: ${BUILD_URL}OverOpsReport/"
   }
@@ -249,6 +263,7 @@ All parameters are optional.
 | [`criticalRegressionDelta`](#critical-regression-threshold-0-1) | Double | `0` |
 | [`applySeasonality`](#apply-seasonality) | boolean | `false` |
 | [`debug`](#debug-mode) | boolean | `false` |
+| [`errorSuccess`](#mark-build-successful-if-unable-to-generate-a-quality-report) | boolean | `false` |
 
 ### Migrating from v1 to v2
 
@@ -269,7 +284,17 @@ Starting in v2, all parameters are optional. You may remove any parameters from 
 |---|-----|-----|---|
 |`activeTimespan`|`10080`|`'7d'`| Now a String |
 |`baselineTimespan`|`720`|`'12h'`| Now a String |
-|`verbose`|`false`| |Replaced by `debug`|
+|`verbose`|`false`| | Replaced by `debug`|
 |`debug`| |`false`|Previously `verbose`|
-|`serverWait`|`60`| | Removed
-|`showResults`|`true`| | Removed
+|`serverWait`|`60`| | Removed |
+|`showResults`|`true`| | Removed |
+
+## Troubleshooting
+
+If previous build steps were not successful, the plugin will not run or attempt to generate a Quality Report.
+
+If the plugin runs but is not able to generate a Quality Report, the build will be marked **Not Built** by default or **Success** if [Mark build successful if unable to generate a Quality Report](#mark-build-successful-if-unable-to-generate-a-quality-report) is checked.
+
+![configure system](readme/error-report.png)
+
+For short-lived applications, [we recommend](https://support.overops.com/hc/en-us/articles/360041054474-Best-Practice-Short-lived-application-considerations) using the ```-Dtakipi.shutdown.gracetime=20000``` agent property.
