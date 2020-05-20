@@ -26,20 +26,21 @@ package com.overops.plugins.jenkins.query;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.regex.Pattern;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import com.overops.plugins.jenkins.query.ReportBuilder.QualityReport;
-import com.takipi.api.client.RemoteApiClient;
-import com.takipi.api.client.data.view.SummarizedView;
+import com.overops.report.service.QualityReportParams;
+import com.overops.report.service.ReportService;
+import com.overops.report.service.ReportService.Requestor;
+import com.overops.report.service.model.QualityReport;
+import com.overops.report.service.model.QualityReportExceptionDetails;
+import com.overops.report.service.model.QualityReport.ReportStatus;
 import com.takipi.api.client.observe.Observer;
-import com.takipi.api.client.util.regression.RegressionInput;
-import com.takipi.api.client.util.view.ViewUtil;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -54,18 +55,15 @@ import net.sf.json.JSONObject;
 
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
-	private static final String SEPERATOR = ",";
-	private boolean runRegressions = false;
-
 	//General Settings
 	private String applicationName;
 	private String deploymentName;
 	private String serviceId;
-	private String url;
-	private String apiToken;
 	private String regexFilter;
 	private boolean markUnstable;
 	private Integer printTopIssues;
+	private boolean showPassedGateEvents;
+
 
 	//Quality Gates
 	private JSONObject checkNewErrors;
@@ -105,6 +103,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.serviceId = null;
 		this.regexFilter = null;
 		this.markUnstable = false;
+		this.showPassedGateEvents = false;
 		this.printTopIssues = 5;
 
 		this.checkNewErrors = null;
@@ -137,7 +136,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 	// deprecated for improved Pipeline integration - see: https://jenkins.io/doc/developer/plugin-development/pipeline-integration/#constructor-vs-setters
 	@Deprecated
-	public QueryOverOps(String applicationName, String deploymentName, String serviceId, String regexFilter, boolean markUnstable, Integer printTopIssues, 
+	public QueryOverOps(String applicationName, String deploymentName, String serviceId, String regexFilter, boolean markUnstable, boolean showPassedGateEvents, Integer printTopIssues, 
 			JSONObject checkNewErrors, boolean newEvents, JSONObject checkResurfacedErrors, boolean resurfacedErrors, 
 			JSONObject checkVolumeErrors, Integer maxErrorVolume, JSONObject checkUniqueErrors, 
 			Integer maxUniqueErrors, JSONObject checkCriticalErrors, String criticalExceptionTypes, JSONObject checkRegressionErrors, String activeTimespan, 
@@ -150,6 +149,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 		setRegexFilter(regexFilter);
 		setMarkUnstable(markUnstable);
+		setShowPassedGateEvents(showPassedGateEvents);
 		setPrintTopIssues(printTopIssues);
 
 		setCheckNewErrors(checkNewErrors);
@@ -158,8 +158,6 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		setCheckUniqueErrors(checkUniqueErrors);
 
 		setCheckCriticalErrors(checkCriticalErrors);
-
-		setCheckRegressionErrors(checkRegressionErrors);
 
 		setDebug(debug);
 		setErrorSuccess(errorSuccess);
@@ -340,46 +338,6 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		return checkRegressionErrors;
 	}
 
-	@DataBoundSetter
-	public void setCheckRegressionErrors(JSONObject checkRegressionErrors) {
-		this.checkRegressionErrors = checkRegressionErrors;
-
-		//parse the JSON object to get the checkRegressionErrors values
-		if (checkRegressionErrors != null && !checkRegressionErrors.isNullObject()) {
-			String value = checkRegressionErrors.getString ("activeTimespan");
-			if (value != null && !value.isEmpty()) {
-				setActiveTimespan(value);
-			}
-
-			value = checkRegressionErrors.getString ("baselineTimespan");
-			if (value != null && !value.isEmpty()) {
-				setBaselineTimespan(value);
-			}
-
-			value = checkRegressionErrors.getString ("minErrorRateThreshold");
-			if (value != null && !value.isEmpty()) {
-				setMinErrorRateThreshold(Double.valueOf(value));
-			}
-
-			value = checkRegressionErrors.getString ("minVolumeThreshold");
-			if (value != null && !value.isEmpty()) {
-				setMinVolumeThreshold(Integer.valueOf(value));
-			}
-
-			setApplySeasonality(checkRegressionErrors.getBoolean("applySeasonality"));
-
-			value = checkRegressionErrors.getString ("regressionDelta");
-			if (value != null && !value.isEmpty()) {
-				setRegressionDelta(Double.valueOf(value));
-			}
-
-			value = checkRegressionErrors.getString ("criticalRegressionDelta");
-			if (value != null && !value.isEmpty()) {
-				setCriticalRegressionDelta(Double.valueOf(value));
-			}
-		}
-
-	}
 
 	public String getCriticalExceptionTypes() {
 		return criticalExceptionTypes;
@@ -390,73 +348,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.criticalExceptionTypes = criticalExceptionTypes;
 	}
 
-	public String getActiveTimespan() {
-		return activeTimespan;
-	}
 
-	@DataBoundSetter
-	public void setActiveTimespan(String activeTimespan) {
-		this.activeTimespan = activeTimespan;
-	}
-
-	public String getBaselineTimespan() {
-		return baselineTimespan;
-	}
-
-	@DataBoundSetter
-	public void setBaselineTimespan(String baselineTimespan) {
-		this.baselineTimespan = baselineTimespan;
-
-		// default is 0, but must be > 0. this must be set to run regressions
-		if (convertToMinutes(baselineTimespan) > 0) {
-			runRegressions = true;
-		}
-	}
-
-	public Double getMinErrorRateThreshold() {
-		return minErrorRateThreshold;
-	}
-
-	@DataBoundSetter
-	public void setMinErrorRateThreshold(Double minErrorRateThreshold) {
-		this.minErrorRateThreshold = minErrorRateThreshold;
-	}
-
-	public Double getCriticalRegressionDelta() {
-		return criticalRegressionDelta;
-	}
-
-	@DataBoundSetter
-	public void setCriticalRegressionDelta(Double criticalRegressionDelta) {
-		this.criticalRegressionDelta = criticalRegressionDelta;
-	}
-
-	public Integer getMinVolumeThreshold() {
-		return minVolumeThreshold;
-	}
-
-	@DataBoundSetter
-	public void setMinVolumeThreshold(Integer minVolumeThreshold) {
-		this.minVolumeThreshold = minVolumeThreshold;
-	}
-
-	public Double getRegressionDelta() {
-		return regressionDelta;
-	}
-
-	@DataBoundSetter
-	public void setRegressionDelta(Double regressionDelta) {
-		this.regressionDelta = regressionDelta;
-	}
-
-	public boolean getApplySeasonality() {
-		return applySeasonality;
-	}
-
-	@DataBoundSetter
-	public void setApplySeasonality(boolean applySeasonality) {
-		this.applySeasonality = applySeasonality;
-	}
 
 	public Integer getPrintTopIssues() {
 		return printTopIssues;
@@ -476,6 +368,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.markUnstable = markUnstable;
 	}
 
+	public boolean getShowPassedGateEvents() {
+		return showPassedGateEvents;
+	}
+
+	@DataBoundSetter
+	public void setShowPassedGateEvents(boolean showPassedGateEvents) {
+		this.showPassedGateEvents = showPassedGateEvents;
+	}
 
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
@@ -485,26 +385,6 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	@Override
 	public DescriptorImpl getDescriptor() {
 		return (DescriptorImpl) super.getDescriptor();
-	}
-
-	private static boolean isResolved(String value) {
-		boolean isVar = (value.startsWith("${") && (value.endsWith("}")));
-		return !isVar;
-	}
-
-	private static Collection<String> parseArrayString(String value, PrintStream printStream, String name) {
-		if ((value == null) || (value.isEmpty())) {
-			return Collections.emptySet();
-		}
-
-		if (!isResolved(value)) {
-			printStream.println("Value " + value + " is unresolved for " + name + ". Ignoring.");
-			return Collections.emptySet();
-		}
-
-		Collection<String> result = Arrays.asList(value.trim().split(Pattern.quote(SEPERATOR)));
-
-		return result;
 	}
 
 	@Override
@@ -531,49 +411,41 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		}
 		
 		pauseForTheCause(printStream);
-		
-		//validate inputs first
-		validateInputs(printStream);
 
-		try {
-			RemoteApiClient apiClient = (RemoteApiClient) RemoteApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
-
-			if ((printStream != null) && (debug)) {
-				apiClient.addObserver(new ApiClientObserver(printStream, debug));
-			}
-
-			SummarizedView allEventsView = ViewUtil.getServiceViewByName(apiClient, serviceId.toUpperCase(), "All Events");
-
-			if (allEventsView == null) {
-				throw new IllegalStateException(
-						"Could not acquire ID for 'All Events'. Please check connection to " + apiHost);
-			}
-
-			RegressionInput input = setupRegressionData(run, allEventsView, listener, printStream);
-
-			QualityReport report = ReportBuilder.execute(apiClient, input, maxErrorVolume, maxUniqueErrors,
-					printTopIssues, regexFilter, newEvents, resurfacedErrors, runRegressions, markUnstable, printStream, debug);
-
-			OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
+        QualityReport reportModel = null;
+        ReportService reportService = new ReportService();
+        try {
+			validateInputs(printStream);
+			QualityReportParams query = getQualityReportParams();
+			reportModel = reportService.runQualityReport(apiHost, apiKey, query, Requestor.JENKINS, printStream, debug);
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(reportModel.getHtmlParts(showPassedGateEvents), run);
 			run.addAction(buildAction);
-
-			if ((markUnstable) && (report.getUnstable())) {
+			if (reportModel.getStatusCode() == ReportStatus.FAILED) {
 				run.setResult(Result.UNSTABLE);
 			}
+        } catch (Exception exception) {
+            reportModel = new QualityReport();
 
-		} catch (Exception ex) {
-			// show exception in the UI
+            QualityReportExceptionDetails exceptionDetails = new QualityReportExceptionDetails();
+            exceptionDetails.setExceptionMessage(exception.getMessage());
 
-			OverOpsBuildAction buildAction = new OverOpsBuildAction(ex, run);
+            List<StackTraceElement> stackElements = Arrays.asList(exception.getStackTrace());
+            List<String> stackTrace = new ArrayList<>();
+            stackTrace.add(exception.getClass().getName());
+            stackTrace.addAll(stackElements.stream().map(stack -> stack.toString()).collect(Collectors.toList()));
+            exceptionDetails.setStackTrace(stackTrace.toArray(new String[stackTrace.size()]));
+
+			reportModel.setExceptionDetails(exceptionDetails);
+
+			OverOpsBuildAction buildAction = new OverOpsBuildAction(reportModel.getHtmlParts(), run);
 			run.addAction(buildAction);
 
-			// mark build "not built" (or "success", set in advanced settings)
 			if (errorSuccess) {
 				run.setResult(Result.SUCCESS);
 			} else {
 				run.setResult(Result.NOT_BUILT);
 			}
-		}
+        }
 	}
 
 	@Override
@@ -606,36 +478,59 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			"debug=" + this.debug + " ]";
 	}
 
-	//setup the regression object
-	private RegressionInput setupRegressionData(Run<?, ?> run, SummarizedView allEventsView, TaskListener listener, PrintStream printStream) 
-			throws InterruptedException, IOException {
-		
-		RegressionInput input = new RegressionInput();
-		input.serviceId = serviceId;
-		input.viewId = allEventsView.id;
-		String expandedAppName = run.getEnvironment(listener).expand(applicationName);
-		String expandedDepName = run.getEnvironment(listener).expand(deploymentName);
-		input.applictations = parseArrayString(expandedAppName, printStream, "Application Name");
-		input.deployments = parseArrayString(expandedDepName, printStream, "Deployment Name");
-		input.criticalExceptionTypes = parseArrayString(criticalExceptionTypes, printStream,
-				"Critical Exception Types");
-
-		if (runRegressions) {
-			input.activeTimespan = convertToMinutes(activeTimespan);
-			input.baselineTime = baselineTimespan;
-			input.baselineTimespan = convertToMinutes(baselineTimespan);
-			input.minVolumeThreshold = minVolumeThreshold;
-			input.minErrorRateThreshold = minErrorRateThreshold;
-			input.regressionDelta = regressionDelta;
-			input.criticalRegressionDelta = criticalRegressionDelta;
-			input.applySeasonality = applySeasonality;
-			input.validate();
+	private QualityReportParams getQualityReportParams() {
+	
+        QualityReportParams queryOverOps = new QualityReportParams();
+        queryOverOps.setApplicationName(applicationName);
+        queryOverOps.setDeploymentName(deploymentName);
+        queryOverOps.setServiceId(serviceId);
+        queryOverOps.setRegexFilter(regexFilter);
+        queryOverOps.setMarkUnstable(markUnstable);
+        queryOverOps.setPrintTopIssues(printTopIssues);
+        queryOverOps.setNewEvents(newEvents);
+		queryOverOps.setResurfacedErrors(resurfacedErrors);
+		if (checkVolumeErrors != null && !checkVolumeErrors.isNullObject()) {
+			String value = checkVolumeErrors.getString("maxErrorVolume");
+			if (value != null && !value.isEmpty()) {
+				queryOverOps.setMaxErrorVolume(Math.max(1, Integer.valueOf(value)));
+			} else {
+				queryOverOps.setMaxErrorVolume(1);
+			}
+		} else {
+			queryOverOps.setMaxErrorVolume(0);
 		}
 
-		printInputs(printStream, input);
+		if (checkUniqueErrors != null && !checkUniqueErrors.isNullObject()) {
+			String value = checkUniqueErrors.getString("maxUniqueErrors");
+			if (value != null && !value.isEmpty()) {
+				queryOverOps.setMaxUniqueErrors(Math.max(1, Integer.valueOf(value)));
+			} else {
+				queryOverOps.setMaxUniqueErrors(1);
+			}
+		} else {
+			queryOverOps.setMaxUniqueErrors(0);
+		}
 
-		return input;
-	}
+		if (checkCriticalErrors != null && !checkCriticalErrors.isNullObject()) {
+			String value = checkCriticalErrors.getString("criticalExceptionTypes");
+			if (value != null && !value.isEmpty()) {
+				queryOverOps.setCriticalExceptionTypes(value);
+			} else {
+				queryOverOps.setCriticalExceptionTypes("");
+			}
+			queryOverOps.setCriticalExceptionTypes("");
+		}
+
+        queryOverOps.setActiveTimespan("0");
+        queryOverOps.setBaselineTimespan("0");
+        queryOverOps.setMinVolumeThreshold(0);
+        queryOverOps.setMinErrorRateThreshold(0);
+        queryOverOps.setRegressionDelta(0);
+        queryOverOps.setCriticalRegressionDelta(0);
+        queryOverOps.setApplySeasonality(false);
+
+        return queryOverOps;
+    }
 	
 	//validate inputs
 	private void validateInputs (PrintStream printStream) throws InterruptedException, IOException {
@@ -650,19 +545,6 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			throw new IllegalArgumentException("Missing api key");
 		}
 		
-		//validate active and baseline time window
-		if (checkRegressionErrors != null) {
-			if (!activeTimespan.equalsIgnoreCase("0")) {
-				if (convertToMinutes(activeTimespan) == 0) {
-					throw new IllegalArgumentException("For Increasing Error Gate, the active timewindow currently set to: " + activeTimespan +  " is not properly formated. See help for format instructions.");
-				}
-			}
-			if (!baselineTimespan.equalsIgnoreCase("0")) {
-				if (convertToMinutes(baselineTimespan) == 0) {
-					throw new IllegalArgumentException("For Increasing Error Gate, the baseline timewindow currently set to: " + baselineTimespan + " cannot be zero or is improperly formated. See help for format instructions.");
-				}
-			}
-		}
 
 		if ((this.serviceId == null) || (this.serviceId.isEmpty())) {
 			this.serviceId = getDescriptor().getOverOpsSID();
@@ -675,46 +557,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.serviceId = this.serviceId.toUpperCase();
 
 	}
-	
-	//convert input string (7d) to minutes
-	private int convertToMinutes(String timeWindow) {
-		
-		if (timeWindow.toLowerCase().contains("d")) {
-			Integer days = Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("d")));
-			return days * 24 * 60;
-		} else if (timeWindow.toLowerCase().contains("h")) {
-			Integer hours = Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("h")));
-			return hours * 60;
-		} else if (timeWindow.toLowerCase().contains("m")) {
-			return Integer.parseInt(timeWindow.substring(0, timeWindow.indexOf("m")));
-		} 
-		
-		return 0;
-	}
 
-	private void printInputs(PrintStream printStream, RegressionInput input) {
-
-		if (printStream != null) {
-			printStream.println(input);
-
-			printStream.println("Max unique errors  = " + maxUniqueErrors);
-			printStream.println("Max error volume  = " + maxErrorVolume);
-			printStream.println("Check new errors  = " + newEvents);
-			printStream.println("Check resurfaced errors  = " + resurfacedErrors);
-
-			String regexPrint;
-
-			if (regexFilter != null) {
-				regexPrint = regexFilter;
-			} else {
-				regexPrint = "";
-			}
-
-			printStream.println("Regex filter  = " + regexPrint);
-		}
-	}
-	
-	
 	//sleep for 1 minute to ensure all data is in OverOps especially for short running unit tests
 	private static void pauseForTheCause(PrintStream printStream) {
 		if (printStream != null) {
