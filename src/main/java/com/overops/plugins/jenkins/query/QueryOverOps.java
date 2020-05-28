@@ -421,7 +421,13 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			OverOpsBuildAction buildAction = new OverOpsBuildAction(reportModel.getHtmlParts(showPassedGateEvents), run);
 			run.addAction(buildAction);
 			if (reportModel.getStatusCode() == ReportStatus.FAILED) {
-				run.setResult(Result.UNSTABLE);
+				if ((reportModel.getExceptionDetails() != null) && errorSuccess) {
+					run.setResult(Result.SUCCESS);
+				} else {
+					run.setResult(Result.UNSTABLE);
+				}
+			} else {
+				run.setResult(Result.SUCCESS);
 			}
         } catch (Exception exception) {
             reportModel = new QualityReport();
@@ -443,7 +449,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			if (errorSuccess) {
 				run.setResult(Result.SUCCESS);
 			} else {
-				run.setResult(Result.NOT_BUILT);
+				run.setResult(Result.UNSTABLE);
 			}
         }
 	}
@@ -518,7 +524,6 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			} else {
 				queryOverOps.setCriticalExceptionTypes("");
 			}
-			queryOverOps.setCriticalExceptionTypes("");
 		}
 
         queryOverOps.setActiveTimespan("0");
