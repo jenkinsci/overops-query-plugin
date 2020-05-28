@@ -498,7 +498,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		if (checkVolumeErrors != null && !checkVolumeErrors.isNullObject()) {
 			String value = checkVolumeErrors.getString("maxErrorVolume");
 			if (value != null && !value.isEmpty()) {
-				queryOverOps.setMaxErrorVolume(Math.max(1, Integer.valueOf(value)));
+				queryOverOps.setMaxErrorVolume(Math.max(1, Integer.parseInt(value)));
 			} else {
 				queryOverOps.setMaxErrorVolume(1);
 			}
@@ -509,7 +509,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		if (checkUniqueErrors != null && !checkUniqueErrors.isNullObject()) {
 			String value = checkUniqueErrors.getString("maxUniqueErrors");
 			if (value != null && !value.isEmpty()) {
-				queryOverOps.setMaxUniqueErrors(Math.max(1, Integer.valueOf(value)));
+				queryOverOps.setMaxUniqueErrors(Math.max(1, Integer.parseInt(value)));
 			} else {
 				queryOverOps.setMaxUniqueErrors(1);
 			}
