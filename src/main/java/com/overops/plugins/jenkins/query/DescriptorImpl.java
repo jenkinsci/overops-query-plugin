@@ -27,6 +27,7 @@ import net.sf.json.JSONObject;
 @Extension
 @Symbol("OverOpsQuery")
 public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+	private String overOpsAppURL;
 	private String overOpsURL;
 	private String overOpsSID;
 	private Secret overOpsAPIKey;
@@ -50,11 +51,16 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 	@Override
 	public boolean configure(StaplerRequest req, JSONObject formData) {
 		JSONObject QueryOverOpsJson = formData.getJSONObject("QueryOverOps");
+		overOpsAppURL = QueryOverOpsJson.getString("overOpsAppURL");
 		overOpsURL = QueryOverOpsJson.getString("overOpsURL");
 		overOpsSID = QueryOverOpsJson.getString("overOpsSID");
 		overOpsAPIKey = Secret.fromString(QueryOverOpsJson.getString("overOpsAPIKey"));
 		save();
 		return false;
+	}
+
+	public String getOverOpsAppURL() {
+		return overOpsAppURL;
 	}
 
 	public String getOverOpsURL() {
@@ -101,12 +107,17 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 	 * @return
 	 */
 	@POST
-	public FormValidation doTestConnection(@QueryParameter("overOpsURL") final String overOpsURL,
+	public FormValidation doTestConnection(@QueryParameter("overOpsAppURL") final String overOpsAppURL,
+			@QueryParameter("overOpsURL") final String overOpsURL,
 			@QueryParameter("overOpsSID") final String overOpsSID,
 			@QueryParameter("overOpsAPIKey") final Secret overOpsAPIKey) {
 
+		if (overOpsAppURL == null || overOpsAppURL.isEmpty()) {
+			return FormValidation.error("OverOps Application URL is empty");
+		}
+
 		if (overOpsURL == null || overOpsURL.isEmpty()) {
-			return FormValidation.error("OverOps URL is empty");
+			return FormValidation.error("OverOps API URL is empty");
 		}
 
 		// Admin permission check

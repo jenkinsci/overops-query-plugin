@@ -1,7 +1,10 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
         <f:section title="OverOps Quality Report" name="QueryOverOps" >
-        <f:entry title="OverOps URL" field="overOpsURL">
+        <f:entry title="OverOps Application URL" field="overOpsAppURL">
+            <f:textbox />
+        </f:entry>
+        <f:entry title="OverOps API URL" field="overOpsURL">
             <f:textbox />
         </f:entry>
         <f:entry title="OverOps Environment ID" field="overOpsSID">
@@ -11,7 +14,7 @@
             <f:password />
         </f:entry>
         <f:validateButton
-   title="${%Test Connection}" progress="${%Testing...}"
-   method="testConnection" with="overOpsURL,overOpsSID,overOpsAPIKey" />
+           title="${%Test Connection}" progress="${%Testing...}"
+           method="testConnection" with="overOpsAppURL,overOpsURL,overOpsSID,overOpsAPIKey" />
         </f:section>   
 </j:jelly>

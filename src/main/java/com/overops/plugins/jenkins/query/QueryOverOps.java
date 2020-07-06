@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.overops.report.service.model.HtmlParts;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -52,6 +53,7 @@ import hudson.tasks.Recorder;
 import hudson.util.Secret;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.w3c.tidy.Report;
 
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
@@ -93,6 +95,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	// Advanced Options
 	private boolean debug;
 	private boolean errorSuccess;
+	private boolean linkReport;
 
 	// all settings are optional
 	@DataBoundConstructor
@@ -132,16 +135,17 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 		this.debug = false;
 		this.errorSuccess = false;
+		this.linkReport = false;
 	}
 
 	// deprecated for improved Pipeline integration - see: https://jenkins.io/doc/developer/plugin-development/pipeline-integration/#constructor-vs-setters
 	@Deprecated
-	public QueryOverOps(String applicationName, String deploymentName, String serviceId, String regexFilter, boolean markUnstable, boolean showPassedGateEvents, Integer printTopIssues, 
-			JSONObject checkNewErrors, boolean newEvents, JSONObject checkResurfacedErrors, boolean resurfacedErrors, 
-			JSONObject checkVolumeErrors, Integer maxErrorVolume, JSONObject checkUniqueErrors, 
-			Integer maxUniqueErrors, JSONObject checkCriticalErrors, String criticalExceptionTypes, JSONObject checkRegressionErrors, String activeTimespan, 
+	public QueryOverOps(String applicationName, String deploymentName, String serviceId, String regexFilter, boolean markUnstable, boolean showPassedGateEvents, Integer printTopIssues,
+			JSONObject checkNewErrors, boolean newEvents, JSONObject checkResurfacedErrors, boolean resurfacedErrors,
+			JSONObject checkVolumeErrors, Integer maxErrorVolume, JSONObject checkUniqueErrors,
+			Integer maxUniqueErrors, JSONObject checkCriticalErrors, String criticalExceptionTypes, JSONObject checkRegressionErrors, String activeTimespan,
 			String baselineTimespan, Double minErrorRateThreshold, Integer minVolumeThreshold, boolean applySeasonality, Double regressionDelta, Double criticalRegressionDelta,
-			boolean debug, boolean errorSuccess) {
+			boolean debug, boolean errorSuccess, boolean linkReport) {
 
 		setApplicationName(applicationName);
 		setDeploymentName(deploymentName);
@@ -160,6 +164,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		setCheckCriticalErrors(checkCriticalErrors);
 
 		setDebug(debug);
+		setLinkReport(linkReport);
 		setErrorSuccess(errorSuccess);
 	}
 
@@ -209,6 +214,15 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	@DataBoundSetter
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	public boolean getLinkReport() {
+		return linkReport;
+	}
+
+	@DataBoundSetter
+	public void setLinkReport(boolean linkReport) {
+		this.linkReport = linkReport;
 	}
 
 	public boolean getErrorSuccess() {
@@ -390,7 +404,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
-				
+
+		String appUrl = getDescriptor().getOverOpsAppURL();
 		String apiHost = getDescriptor().getOverOpsURL();
 		String apiKey = Secret.toString(getDescriptor().getOverOpsAPIKey());
 
@@ -402,32 +417,40 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		} else {
 			printStream = null;
 		}
-		
+
 		//check to see if anything prior has failed and if so, skip the OverOps Quality Check
 		Result result = run.getResult();
 		if (result != null && result.isWorseThan(Result.UNSTABLE)) {
 			printStream.println("Skipping OverOps Report due to prior build failure");
 			return;
 		}
-		
-		pauseForTheCause(printStream);
 
         QualityReport reportModel = null;
         ReportService reportService = new ReportService();
-        try {
+		try {
+			OverOpsBuildAction buildAction;
 			validateInputs(printStream);
 			QualityReportParams query = getQualityReportParams();
-			reportModel = reportService.runQualityReport(apiHost, apiKey, query, Requestor.JENKINS, printStream, debug);
-			OverOpsBuildAction buildAction = new OverOpsBuildAction(reportModel.getHtmlParts(showPassedGateEvents), run);
-			run.addAction(buildAction);
-			if (reportModel.getStatusCode() == ReportStatus.FAILED) {
-				if ((reportModel.getExceptionDetails() != null) && errorSuccess) {
-					run.setResult(Result.SUCCESS);
-				} else {
-					run.setResult(Result.UNSTABLE);
-				}
-			} else {
+
+			if(linkReport){
+				String reportLinkHtml = reportService.generateReportLinkHtml(appUrl, query, printStream, debug);
+				buildAction = new OverOpsBuildAction(new HtmlParts(reportLinkHtml, ""), run);
+				run.addAction(buildAction);
 				run.setResult(Result.SUCCESS);
+			}else {
+				ReportService.pauseForTheCause(listener.getLogger());
+				reportModel = reportService.runQualityReport(apiHost, apiKey, query, Requestor.JENKINS, printStream, debug);
+				buildAction = new OverOpsBuildAction(reportModel.getHtmlParts(showPassedGateEvents), run);
+				run.addAction(buildAction);
+				if (reportModel.getStatusCode() == ReportStatus.FAILED) {
+					if ((reportModel.getExceptionDetails() != null) && errorSuccess) {
+						run.setResult(Result.SUCCESS);
+					} else {
+						run.setResult(Result.UNSTABLE);
+					}
+				} else {
+					run.setResult(Result.SUCCESS);
+				}
 			}
         } catch (Exception exception) {
             reportModel = new QualityReport();
@@ -481,11 +504,12 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			"regressionDelta=" + this.regressionDelta + ", " +
 			"criticalRegressionDelta=" + this.criticalRegressionDelta + ", " +
 			"applySeasonality=" + this.applySeasonality + ", " +
-			"debug=" + this.debug + " ]";
+			"debug=" + this.debug + "," +
+			"linkReport=" + this.linkReport + " ]";
 	}
 
 	private QualityReportParams getQualityReportParams() {
-	
+
         QualityReportParams queryOverOps = new QualityReportParams();
         queryOverOps.setApplicationName(applicationName);
         queryOverOps.setDeploymentName(deploymentName);
@@ -536,7 +560,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
         return queryOverOps;
     }
-	
+
 	//validate inputs
 	private void validateInputs (PrintStream printStream) throws InterruptedException, IOException {
 		String apiHost = getDescriptor().getOverOpsURL();
@@ -549,30 +573,17 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		if (apiKey == null) {
 			throw new IllegalArgumentException("Missing api key");
 		}
-		
 
 		if ((this.serviceId == null) || (this.serviceId.isEmpty())) {
 			this.serviceId = getDescriptor().getOverOpsSID();
-		} 
+		}
 
 		if (this.serviceId == null) {
 			throw new IllegalArgumentException("Missing environment Id");
 		}
-		
+
 		this.serviceId = this.serviceId.toUpperCase();
 
-	}
-
-	//sleep for 1 minute to ensure all data is in OverOps especially for short running unit tests
-	private static void pauseForTheCause(PrintStream printStream) {
-		if (printStream != null) {
-			printStream.println("Build Step: Starting OverOps Quality Gate....");
-		}
-		try {
-			Thread.sleep(60000);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
 	}
 
 	protected static class ApiClientObserver implements Observer {
