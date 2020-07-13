@@ -64,6 +64,9 @@
         <f:entry title="Mark build successful if unable to generate a Quality Report" field="errorSuccess">
           <f:checkbox default="false"/>
         </f:entry>
+        <f:entry title="Link Report" field="linkReport">
+          <f:checkbox default="false"/>
+        </f:entry>
       </table>
     </f:block>
   </f:section>
