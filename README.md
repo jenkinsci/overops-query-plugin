@@ -130,6 +130,9 @@ If checked, all queries and results will be displayed in the OverOps reliability
 
 If checked, the build will be marked **Success** if unable to generate a Quality Report. By default, the build will be marked **Not Built** if unable to generate a Quality Report.
 
+### Link Report
+If set to true a link to the Quality Report will be generated and displayed instead of the Quality Report itself. The OverOps Application URL needs to be set for the link to be generated correctly. Also this option, if set to true, voids the Mark build successful if unstable option. This link can be used if it is desired to not fail the build and you do not want to wait for the Quality Report to be generated.
+
 ## Pipeline
 
 This plugin is compatible with Jenkins Pipeline.
