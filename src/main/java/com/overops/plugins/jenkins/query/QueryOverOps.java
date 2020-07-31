@@ -430,7 +430,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		try {
 			OverOpsBuildAction buildAction;
 			validateInputs(printStream);
-			QualityReportParams query = getQualityReportParams();
+			QualityReportParams query = getQualityReportParams(run,listener);
 
 			if(linkReport){
 				String reportLinkHtml = reportService.generateReportLinkHtml(appUrl, query, printStream, debug);
@@ -508,11 +508,15 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			"linkReport=" + this.linkReport + " ]";
 	}
 
-	private QualityReportParams getQualityReportParams() {
+	private QualityReportParams getQualityReportParams(Run<?, ?> run, TaskListener listener) {
 
         QualityReportParams queryOverOps = new QualityReportParams();
-        queryOverOps.setApplicationName(applicationName);
-        queryOverOps.setDeploymentName(deploymentName);
+		try{
+			queryOverOps.setApplicationName(run.getEnvironment(listener).expand(applicationName));
+			queryOverOps.setDeploymentName(run.getEnvironment(listener).expand(deploymentName));
+		}catch(InterruptedException | IOException e){
+			throw new RuntimeException("Unexpected error replacing variables", e);
+		}
         queryOverOps.setServiceId(serviceId);
         queryOverOps.setRegexFilter(regexFilter);
         queryOverOps.setMarkUnstable(markUnstable);
