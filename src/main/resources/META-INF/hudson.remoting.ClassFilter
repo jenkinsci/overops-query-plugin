@@ -1,3 +1,4 @@
+com.overops.report.service.model.HtmlParts
 com.takipi.common.api.result.event.EventResult
 com.takipi.common.api.data.event.Location
 com.takipi.common.api.data.event.Stats
